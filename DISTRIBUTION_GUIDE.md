@@ -280,4 +280,4 @@ The GPU Text Search tool is **production-ready** and positioned to make a signif
 
 ---
 
-*"Making high-performance text search accessible to everyone with a Mac"* 💎
+*"Making high-performance text search accessible to everyone with a Mac"* 💎\n

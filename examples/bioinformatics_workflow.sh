@@ -259,4 +259,4 @@ echo "    positions = [struct.unpack('<I', f.read(4))[0] for _ in range(10)]"
 echo "    print('First 10 GATTACA positions:', positions)"
 echo "\""
 
-log "Workflow completed successfully! 🚀"
+log "Workflow completed successfully! 🚀"\n

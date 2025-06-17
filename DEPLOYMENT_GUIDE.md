@@ -344,4 +344,4 @@ sudo pmset -a powernap 0
 
 ---
 
-**For additional support or performance optimization questions, refer to the comprehensive README.md and technical documentation included in this archive.**
+**For additional support or performance optimization questions, refer to the comprehensive README.md and technical documentation included in this archive.**\n

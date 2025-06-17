@@ -104,4 +104,4 @@ if __name__ == "__main__":
     if expected_size == actual_size:
         print(f"✅ File size correct: {actual_size} bytes")
     else:
-        print(f"❌ File size mismatch: expected {expected_size}, got {actual_size}")
+        print(f"❌ File size mismatch: expected {expected_size}, got {actual_size}")\n

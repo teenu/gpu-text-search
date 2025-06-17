@@ -102,4 +102,4 @@ The CLI tool demonstrates **exceptional performance** on real-world large files:
 ✅ **Robust Handling**: Proper buffer limits and edge cases
 ✅ **Efficient Export**: Instant binary position export
 
-This represents a **~150x performance improvement** over traditional text search tools while maintaining perfect accuracy and adding advanced features like benchmarking and profiling.
+This represents a **~150x performance improvement** over traditional text search tools while maintaining perfect accuracy and adding advanced features like benchmarking and profiling.\n

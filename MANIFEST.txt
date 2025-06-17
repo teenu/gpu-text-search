@@ -36,6 +36,6 @@ Test Data:
 Setup Scripts:
   quick_test.sh                    - Automated validation and setup test
 
-Total Files: $(find "$ARCHIVE_DIR" -type f | wc -l)
-Total Size: $(du -sh "$ARCHIVE_DIR" | cut -f1)
+Total Files: 58
+Total Size: 508K
 
