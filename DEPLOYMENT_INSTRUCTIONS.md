@@ -269,4 +269,4 @@ Your deployment is successful when:
 
 ---
 
-**🚀 Enjoy the blazing-fast performance of GPU Text Search - Gilded Edition!**
+**🚀 Enjoy the blazing-fast performance of GPU Text Search - Gilded Edition!**\n

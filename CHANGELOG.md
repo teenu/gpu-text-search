@@ -145,4 +145,4 @@
 | 1.0.0   | 32.3 GB/s     | 1.63s      | ±0.138s     | Metal GPU Foundation |
 | 2.0.0   | 32.5 GB/s     | 0.10s      | ±0.006s     | Binary Archives + Optimization |
 
-**Total Improvement**: 16x faster cold start, 23x more consistent, maintained peak performance
+**Total Improvement**: 16x faster cold start, 23x more consistent, maintained peak performance\n

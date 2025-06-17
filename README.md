@@ -440,4 +440,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ for high-performance text processing**
+**Built with ❤️ for high-performance text processing**\n

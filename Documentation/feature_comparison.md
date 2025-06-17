@@ -73,4 +73,4 @@
 4. **Batch Processing**: Easy to run multiple tests
 
 ### Recommendation
-The CLI version successfully provides **100% functional parity** with the GUI for core text search operations, with additional benefits for testing and automation.
+The CLI version successfully provides **100% functional parity** with the GUI for core text search operations, with additional benefits for testing and automation.\n
