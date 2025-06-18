@@ -1,6 +1,7 @@
 # Homebrew Formula for GPU Text Search
 
 This directory contains the Homebrew formula for installing GPU Text Search.
+**Note:** the formula is still being finalized and is not yet available from Homebrew Core.
 
 ## Installation
 
