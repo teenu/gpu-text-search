@@ -255,4 +255,4 @@ See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Need help with your specific use case?** Open an issue and we'll help you optimize your workflow! 🚀
+**Need help with your specific use case?** Open an issue and we'll help you optimize your workflow! 🚀\n

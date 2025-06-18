@@ -133,4 +133,4 @@ Always validate performance changes:
 
 ## Binary Export Format
 
-Match positions exported as little-endian UInt32 arrays for downstream processing. Use `Validation/validate_binary.py` to verify exported data.
+Match positions exported as little-endian UInt32 arrays for downstream processing. Use `Validation/validate_binary.py` to verify exported data.\n

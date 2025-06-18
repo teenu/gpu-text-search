@@ -91,4 +91,4 @@ system_profiler SPDisplaysDataType | grep Metal
 
 # Run benchmark test
 gpu-text-search "$(brew --prefix)/share/gpu-text-search/test_file.txt" "test" --benchmark --iterations 10
-```
+```\n

@@ -171,4 +171,4 @@ else
 fi
 
 echo
-success "GPU Text Search - Gilded Edition ready for use! 🚀"
+success "GPU Text Search - Gilded Edition ready for use! 🚀"\n
