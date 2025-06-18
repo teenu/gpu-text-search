@@ -2,6 +2,12 @@ import Foundation
 import ArgumentParser
 import SearchEngine
 
+// Shared helper to display bytes in human-readable format
+func formatFileSize(_ bytes: Int) -> String {
+    let mb = Double(bytes) / (1024.0 * 1024.0)
+    return String(format: "%.2f MB (%lld bytes)", mb, Int64(bytes))
+}
+
 // MARK: - Main CLI Application
 
 @main
@@ -137,10 +143,6 @@ struct Search: ParsableCommand {
         }
     }
     
-    private func formatFileSize(_ bytes: Int) -> String {
-        let mb = Double(bytes) / (1024.0 * 1024.0)
-        return String(format: "%.2f MB (%lld bytes)", mb, Int64(bytes))
-    }
 }
 
 // MARK: - Benchmark Command
@@ -250,11 +252,6 @@ struct Benchmark: ParsableCommand {
         for (index, result) in benchmark.results.enumerated() {
             print("\(index + 1),\(result.executionTime),\(result.throughputMBps),\(result.matchCount),\(result.truncated)")
         }
-    }
-    
-    private func formatFileSize(_ bytes: Int) -> String {
-        let mb = Double(bytes) / (1024.0 * 1024.0)
-        return String(format: "%.2f MB", mb)
     }
     
     private func calculateStandardDeviation(_ values: [TimeInterval]) -> TimeInterval {

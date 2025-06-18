@@ -12,7 +12,7 @@ brew install gpu-text-search
 ### Option 2: From This Repository
 ```bash
 # Add this repository as a tap
-brew tap yourusername/gpu-text-search https://github.com/yourusername/gpu-text-search
+brew tap teenu/gpu-text-search https://github.com/teenu/gpu-text-search
 
 # Install the formula
 brew install gpu-text-search
@@ -20,7 +20,7 @@ brew install gpu-text-search
 
 ### Option 3: Install directly from formula
 ```bash
-brew install https://raw.githubusercontent.com/yourusername/gpu-text-search/main/homebrew/gpu-text-search.rb
+brew install https://raw.githubusercontent.com/teenu/gpu-text-search/main/homebrew/gpu-text-search.rb
 ```
 
 ## Usage After Installation
@@ -49,7 +49,7 @@ gpu-text-search "$(brew --prefix)/share/gpu-text-search/test_file.txt" "Hello" -
 brew upgrade gpu-text-search
 
 # Or update from tap
-brew upgrade yourusername/gpu-text-search/gpu-text-search
+brew upgrade teenu/gpu-text-search/gpu-text-search
 ```
 
 ## Uninstalling
@@ -58,7 +58,7 @@ brew upgrade yourusername/gpu-text-search/gpu-text-search
 brew uninstall gpu-text-search
 
 # If installed from tap, also remove the tap
-brew untap yourusername/gpu-text-search
+brew untap teenu/gpu-text-search
 ```
 
 ## Formula Maintenance

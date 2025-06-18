@@ -8,7 +8,7 @@
 [![Swift Version](https://img.shields.io/badge/swift-6.1+-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Release](https://img.shields.io/badge/release-v2.1.0-blue.svg)]()
+[![Release](https://img.shields.io/badge/release-v2.0.0-blue.svg)]()
 
 ---
 
@@ -63,7 +63,7 @@ Transform your text processing workflows with **industry-leading performance**:
 
 ### Build from Source
 ```bash
-git clone https://github.com/yourusername/gpu-text-search.git
+git clone https://github.com/teenu/gpu-text-search.git
 cd gpu-text-search
 swift build -c release
 cp .build/release/search-cli /usr/local/bin/gpu-text-search
