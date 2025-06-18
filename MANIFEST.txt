@@ -1,0 +1,41 @@
+GPU Text Search - File Manifest
+===============================
+
+Core Package Files:
+  Package.swift                     - Swift Package Manager configuration
+  README.md                        - Comprehensive documentation and API reference
+  LICENSE                          - MIT license
+  DEPLOYMENT_GUIDE.md              - Complete setup and troubleshooting guide
+  MASTERCOPY_MANIFEST.md           - Quality assurance certification
+  VERSION.txt                      - Build and version information
+
+Source Code:
+  Sources/SearchEngine/
+    SearchEngine.swift             - Core GPU search engine (667 lines)
+    SearchKernel.metal             - Metal compute shader (59 lines)
+  Sources/SearchCLI/
+    main.swift                     - Command-line interface (356 lines)
+
+Test Suite:
+  Tests/SearchEngineTests/
+    SearchEngineTests.swift        - Comprehensive unit tests
+  Validation/
+    comprehensive_test.py          - Multi-pattern validation script
+    validate_binary.py             - Binary export verification
+    performance_report.md          - Benchmark results and analysis
+
+Documentation:
+  Documentation/
+    feature_comparison.md          - GUI vs CLI feature comparison
+    COMPLIANCE_REPORT.md           - Accuracy and performance validation report
+
+Test Data:
+  test_file.txt                    - Basic test file with multiple patterns
+  unicode_test.txt                 - Unicode and emoji test cases
+
+Setup Scripts:
+  quick_test.sh                    - Automated validation and setup test
+
+Total Files: 58
+Total Size: 508K
+

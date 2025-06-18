@@ -1,0 +1,35 @@
+# Xcode
+.DS_Store
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pins
+Package.resolved
+
+# Test artifacts
+*.bin
+large_test.txt
+temp_*.txt
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+*.dSYM
+*.swiftmodule
+*.swiftdoc
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Temporary files
+*.tmp
+*.log
+EOF < /dev/null

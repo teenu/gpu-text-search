@@ -1,0 +1,7 @@
+Hello World! This is a test file for GPU-accelerated text search.
+The quick brown fox jumps over the lazy dog.
+Hello again! We're testing pattern matching capabilities.
+Function definitions and optimization techniques are important.
+searchOptimizedKernel is the name of our Metal compute shader.
+Hello one more time to test multiple matches.
+This file contains various patterns for testing purposes.
