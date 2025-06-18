@@ -325,33 +325,40 @@ public final class SearchEngine {
     }
     
     private func findMetalResource() throws -> URL {
-        // Try Bundle.module first (development/normal SPM builds)
+        // Search multiple locations for the Metal shader resource
+        let searchPaths: [URL] = [
+            // 1. Try Bundle.module first (development/normal SPM builds)
+            Bundle.module.bundleURL,
+            
+            // 2. Try Homebrew lib installation path
+            (Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0]))
+                .deletingLastPathComponent()
+                .appendingPathComponent("../lib/GPUTextSearch_SearchEngine.bundle")
+                .standardizedFileURL,
+            
+            // 3. Try bundle alongside executable
+            (Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0]))
+                .deletingLastPathComponent()
+                .appendingPathComponent("GPUTextSearch_SearchEngine.bundle"),
+            
+            // 4. Try build directory (development)
+            URL(fileURLWithPath: ".build/arm64-apple-macosx/release/GPUTextSearch_SearchEngine.bundle"),
+            
+            // 5. Try alternative build directory
+            URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                .appendingPathComponent(".build/arm64-apple-macosx/release/GPUTextSearch_SearchEngine.bundle")
+        ]
+        
+        for bundlePath in searchPaths {
+            if let bundle = Bundle(url: bundlePath),
+               let metalURL = bundle.url(forResource: "SearchKernel", withExtension: "metal") {
+                return metalURL
+            }
+        }
+        
+        // If we still can't find it, try Bundle.module directly
         if let moduleURL = Bundle.module.url(forResource: "SearchKernel", withExtension: "metal") {
             return moduleURL
-        }
-        
-        // Try bundle in Homebrew installation path
-        let executableURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
-        let homebrew_bundle_path = executableURL.deletingLastPathComponent().appendingPathComponent("../lib/GPUTextSearch_SearchEngine.bundle")
-        let normalizedPath = homebrew_bundle_path.standardizedFileURL
-        
-        if let bundle = Bundle(url: normalizedPath),
-           let metalURL = bundle.url(forResource: "SearchKernel", withExtension: "metal") {
-            return metalURL
-        }
-        
-        // Try bundle relative to executable directory
-        let local_bundle_path = executableURL.deletingLastPathComponent().appendingPathComponent("GPUTextSearch_SearchEngine.bundle")
-        if let bundle = Bundle(url: local_bundle_path),
-           let metalURL = bundle.url(forResource: "SearchKernel", withExtension: "metal") {
-            return metalURL
-        }
-        
-        // Try build directory (for development)
-        let build_bundle_path = URL(fileURLWithPath: ".build/arm64-apple-macosx/release/GPUTextSearch_SearchEngine.bundle")
-        if let bundle = Bundle(url: build_bundle_path),
-           let metalURL = bundle.url(forResource: "SearchKernel", withExtension: "metal") {
-            return metalURL
         }
         
         throw SearchEngineError.failedToCreateLibrary

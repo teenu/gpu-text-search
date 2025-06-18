@@ -2,9 +2,10 @@ class GpuTextSearch < Formula
   desc "Ultra-high-performance GPU-accelerated text search using Metal compute shaders"
   homepage "https://github.com/teenu/gpu-text-search"
   url "https://github.com/teenu/gpu-text-search.git",
-      tag:      "v1.0.0",
-      revision: "e09c5dc5b2c63bba15d079eb2cb81b964dd807e0"
+      tag:      "v1.0.1",
+      revision: "7f4ddc3045fc6d03b553138b681bdd40ec5caa49"
   license "MIT"
+  version "1.0.1"
   head "https://github.com/teenu/gpu-text-search.git", branch: "main"
 
   depends_on xcode: ["15.0", :build]
@@ -16,7 +17,7 @@ class GpuTextSearch < Formula
     system "swift", "build", *args
     bin.install ".build/release/search-cli" => "gpu-text-search"
     
-    # Install the Metal resource bundle
+    # Install the Metal resource bundle in lib directory (standard Homebrew practice)  
     lib.install ".build/release/GPUTextSearch_SearchEngine.bundle"
     
     # Install documentation  
@@ -55,7 +56,7 @@ class GpuTextSearch < Formula
     # Test verbose output includes performance metrics
     verbose_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'test' --verbose")
     assert_match "Search Results", verbose_output
-    assert_match "matches found", verbose_output
+    assert_match "Matches found:", verbose_output
     
     # Test no matches scenario
     no_match_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'NOTFOUND' --quiet")
