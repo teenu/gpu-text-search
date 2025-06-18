@@ -8,7 +8,7 @@
 [![Swift Version](https://img.shields.io/badge/swift-6.1+-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Release](https://img.shields.io/badge/release-v2.0.0-blue.svg)]()
+[![Release](https://img.shields.io/badge/release-v2.1.1-blue.svg)](https://github.com/teenu/gpu-text-search/releases/tag/v2.1.1)
 
 ---
 
