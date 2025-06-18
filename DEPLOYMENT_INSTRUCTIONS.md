@@ -1,25 +1,9 @@
 # GPU Text Search - Gilded Edition
 ## Sister Machine Deployment Guide
 
-### 🎯 Quick Start (5 Minutes)
-
-For immediate deployment on your sister machine:
-
-1. **Extract the package**:
-   ```bash
-   tar -xzf gpu-text-search-gilded-deploy-kit.tar.gz
-   cd gpu-text-search-gilded
-   ```
-
-2. **Run the automated installer**:
-   ```bash
-   ./install.sh
-   ```
-
-3. **Test immediately**:
-   ```bash
-   search-cli search test_file.txt "Hello" --verbose
-   ```
+> **Note**: This guide focuses on configuration specific to a secondary
+> deployment machine. For basic setup and a full quick start guide, see
+> `DEPLOYMENT_GUIDE.md` in the repository root.
 
 ### 📋 System Requirements
 

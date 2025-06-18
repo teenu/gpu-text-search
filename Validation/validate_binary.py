@@ -33,16 +33,18 @@ def get_grep_positions(filename, pattern):
 
 def validate_positions_in_file(filename, pattern, positions):
     """Manually validate positions by reading file content"""
-    with open(filename, 'r', encoding='utf-8') as f:
+    with open(filename, 'rb') as f:
         content = f.read()
-    
+    pattern_bytes = pattern.encode('utf-8')
+
     valid_positions = []
     for pos in positions:
-        if pos + len(pattern) <= len(content):
-            if content[pos:pos+len(pattern)] == pattern:
+        if pos + len(pattern_bytes) <= len(content):
+            if content[pos:pos+len(pattern_bytes)] == pattern_bytes:
                 valid_positions.append(pos)
             else:
-                print(f"❌ Position {pos} is invalid: '{content[pos:pos+len(pattern)]}' != '{pattern}'")
+                invalid = content[pos:pos+len(pattern_bytes)]
+                print(f"❌ Position {pos} is invalid: '{invalid}' != '{pattern_bytes}'")
         else:
             print(f"❌ Position {pos} is out of bounds")
     
