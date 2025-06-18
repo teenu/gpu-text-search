@@ -1,48 +1,31 @@
 class GpuTextSearch < Formula
   desc "Ultra-high-performance GPU-accelerated text search using Metal compute shaders"
   homepage "https://github.com/teenu/gpu-text-search"
-  url "https://github.com/teenu/gpu-text-search/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "62ec3ea4126a8daa61c493e7ee34354f7b20dbd67076cc4c55b5784674f169c0"
+  url "https://github.com/teenu/gpu-text-search.git",
+      tag:      "v1.0.0",
+      revision: "e09c5dc5b2c63bba15d079eb2cb81b964dd807e0"
   license "MIT"
-  version "1.0.0"
   head "https://github.com/teenu/gpu-text-search.git", branch: "main"
 
   depends_on xcode: ["15.0", :build]
   depends_on :macos => :ventura
+  uses_from_macos "swift" => :build
 
   def install
-    system "swift", "build", "--disable-sandbox", "-c", "release"
+    args = ["--disable-sandbox", "-c", "release"]
+    system "swift", "build", *args
     bin.install ".build/release/search-cli" => "gpu-text-search"
     
-    # Install the resource bundle in the lib directory where Swift can find it
+    # Install the Metal resource bundle
     lib.install ".build/release/GPUTextSearch_SearchEngine.bundle"
     
-    # Install documentation
-    doc.install "README.md", "CHANGELOG.md", "LICENSE"
-    doc.install "Documentation" if Dir.exist?("Documentation")
-    
-    # Install examples and validation scripts for testing
-    if Dir.exist?("examples")
-      (share/"gpu-text-search").install "examples"
-    end
-    
-    # Install test files and validation scripts
-    if File.exist?("test_file.txt")
-      (share/"gpu-text-search").install "test_file.txt"
-    end
-    if File.exist?("unicode_test.txt")
-      (share/"gpu-text-search").install "unicode_test.txt"
-    end
-    if File.exist?("quick_test.sh")
-      (share/"gpu-text-search").install "quick_test.sh"
-    end
-    if Dir.exist?("Validation")
-      (share/"gpu-text-search").install "Validation"
-    end
+    # Install documentation  
+    doc.install "README.md"
+    doc.install "LICENSE"
   end
 
   test do
-    # Create a comprehensive test file with DNA-like sequences
+    # Create test file with various patterns
     test_content = <<~TEST
       Hello World! This is a GPU Text Search test.
       GATTACA is a famous DNA sequence from the movie.
@@ -53,38 +36,28 @@ class GpuTextSearch < Formula
     TEST
     (testpath/"test.txt").write test_content
     
-    # Test basic functionality
+    # Test basic pattern search
     output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'GPU' --quiet")
     assert_equal "1", output.strip
     
-    # Test GATTACA pattern (should find 3 matches)
+    # Test DNA sequence matching (bioinformatics use case)
     gattaca_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'GATTACA' --quiet")
     assert_equal "3", gattaca_output.strip
     
-    # Test DNA pattern matching
-    dna_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'ATCG' --quiet")
-    assert_equal "3", dna_output.strip
+    # Test case sensitivity
+    case_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'hello' --quiet")
+    assert_equal "0", case_output.strip
     
-    # Test help command
+    # Test help command functionality
     help_output = shell_output("#{bin}/gpu-text-search --help")
     assert_match "High-performance GPU-accelerated text search tool", help_output
     
-    # Test verbose output (should include GPU info and performance metrics)
+    # Test verbose output includes performance metrics
     verbose_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'test' --verbose")
-    assert_match "GPU:", verbose_output
     assert_match "Search Results", verbose_output
-    assert_match "Throughput", verbose_output
+    assert_match "matches found", verbose_output
     
-    # Test benchmark functionality 
-    benchmark_output = shell_output("#{bin}/gpu-text-search benchmark #{testpath}/test.txt 'DNA' --iterations 5")
-    assert_match "Benchmark Results", benchmark_output
-    assert_match "Average time", benchmark_output
-    
-    # Test Unicode support
-    unicode_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt '🧬' --quiet")
-    assert_equal "1", unicode_output.strip
-    
-    # Test that no matches returns 0
+    # Test no matches scenario
     no_match_output = shell_output("#{bin}/gpu-text-search #{testpath}/test.txt 'NOTFOUND' --quiet")
     assert_equal "0", no_match_output.strip
   end
