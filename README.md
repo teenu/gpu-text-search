@@ -58,11 +58,14 @@ Transform your text processing workflows with **industry-leading performance**:
 
 ### Homebrew (Recommended) 🍺
 ```bash
-# Install directly from formula
-brew install https://raw.githubusercontent.com/teenu/gpu-text-search/main/homebrew/gpu-text-search.rb
+# Add the tap
+brew tap teenu/gpu-text-search
 
-# Use as 'gpu-text-search' command
-gpu-text-search file.txt "GATTACA" --verbose
+# Install gpu-text-search
+brew install gpu-text-search
+
+# Or install directly in one command
+brew install teenu/gpu-text-search/gpu-text-search
 ```
 
 ### Build from Source
