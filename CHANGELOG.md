@@ -2,7 +2,7 @@
 
 ## Version 2.0.0 - "Gilded Edition" (December 6, 2024)
 
-### 🚀 Major Performance Optimizations
+### Major Performance Optimizations
 
 #### **Cold Start Performance Revolution**
 - **Issue Identified**: First search 16x slower than subsequent searches
@@ -28,7 +28,7 @@
 - Smart cache management with automatic cleanup
 - UTF-8 conversion caching for frequently used patterns
 
-### 🔧 Code Quality & Efficiency Improvements
+### Code Quality & Efficiency Improvements
 
 #### **Code Cleanup & Optimization**
 - **Lines Reduced**: 806 → 720 lines (11% reduction)
@@ -48,7 +48,7 @@
 - Focused warmup on buffer preparation only
 - Maintained user control with --warmup flag
 
-### 🐛 Critical Bug Fixes
+### Critical Bug Fixes
 
 #### **File Size Integer Overflow**
 - **Issue**: Files >2GB displayed negative byte counts
@@ -56,7 +56,7 @@
 - **Fix**: Changed from `%d` to `%lld` format specifier with Int64 casting
 - **Impact**: Proper display of file sizes up to exabytes
 
-### 📊 Performance Metrics
+### Performance Metrics
 
 #### **Throughput Improvements**
 - **Peak Performance**: 32.3 GB/s → 32.5 GB/s
@@ -70,7 +70,7 @@
 - **Reduced Variance**: Eliminated 16x performance difference between runs
 - **Production Ready**: Consistent 30+ GB/s for large genomic datasets
 
-### 🛠 New Features
+### New Features
 
 #### **Enhanced CLI Interface**
 - `--warmup` flag for guaranteed peak first-run performance
@@ -90,7 +90,7 @@
 - Sister machine packaging and distribution
 - Universal binary support for Intel + Apple Silicon
 
-### 🔬 Technical Architecture
+### Technical Architecture
 
 #### **Metal GPU Integration**
 - Pipeline State Object (PSO) caching via binary archives
@@ -110,7 +110,7 @@
 - Smart resource preparation with buffer reuse
 - Minimized CPU ↔ GPU transfer overhead
 
-### 🎯 Production Readiness
+### Production Readiness
 
 #### **Deployment Features**
 - Universal binary distribution for cross-platform compatibility
@@ -128,7 +128,7 @@
 
 ## Version 1.0.0 - "Initial Release" (June 11, 2025)
 
-### 🎉 Initial Implementation
+### Initial Implementation
 - High-performance GPU-accelerated text search using Metal compute shaders
 - Zero-copy file mapping via mmap
 - CLI interface with search, benchmark, and profile commands
