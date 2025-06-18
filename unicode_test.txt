@@ -1,4 +1,0 @@
-Hello 世界! This is a test with émojis 🚀 and accénted characters.
-Здравствуй мир! Тест юникода.
-こんにちは世界！ユニコードテスト。
-🎉 Party emoji with Hello again!

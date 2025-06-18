@@ -2,7 +2,7 @@
 
 > **Ultra-high-performance text search using Metal GPU compute shaders**
 >
-> 🚀 **32+ GB/s throughput** • 🔥 **150x faster than grep** • ⚡ **GPU-accelerated** • 🛠️ **Production-ready**
+> **32+ GB/s throughput** • **150x faster than grep** • **GPU-accelerated** • **Production-ready**
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2013.0+-lightgrey.svg)](https://developer.apple.com/macos/)
 [![Swift Version](https://img.shields.io/badge/swift-6.1+-orange.svg)](https://swift.org)
@@ -12,7 +12,7 @@
 
 ---
 
-## 🎯 **Why GPU Text Search?**
+## Why GPU Text Search?
 
 Transform your text processing workflows with **industry-leading performance**:
 
@@ -30,33 +30,33 @@ Transform your text processing workflows with **industry-leading performance**:
 
 ## Features
 
-### 🚀 **Exceptional Performance**
+### Exceptional Performance
 - Metal compute shaders for parallel GPU execution
 - Memory-mapped file access (zero-copy)
 - Hardware-optimized threadgroup dispatching
 - Atomic operations with relaxed memory ordering
 
-### 🔧 **Production Ready**
+### Production Ready
 - Comprehensive error handling and edge case coverage
 - Binary position export for downstream processing
 - Statistical benchmarking with variance analysis
 - Cross-platform support (macOS, iOS, macCatalyst)
 
-### 📊 **Advanced Analytics**
+### Advanced Analytics
 - Built-in benchmarking suite with statistical analysis
 - Performance profiling across multiple patterns
 - CSV export for data analysis
 - Throughput and timing metrics
 
-### 🛠 **Developer Friendly**
+### Developer Friendly
 - Clean Swift Package Manager integration
 - Comprehensive test suite with validation
 - CLI and library interfaces
 - Detailed documentation and examples
 
-## 📦 **Installation**
+## Installation
 
-### Homebrew (Recommended) 🍺
+### Homebrew (Recommended)
 ```bash
 # Add the tap
 brew tap teenu/gpu-text-search
@@ -89,7 +89,7 @@ sudo mv search-cli /usr/local/bin/gpu-text-search
 - **Apple Silicon or Intel Mac** with Metal GPU support
 - **Xcode 15.0+** (for building from source)
 
-## ⚡ **Quick Start**
+## Quick Start
 
 ### Basic Usage
 ```bash
@@ -200,7 +200,7 @@ Options:
   --verbose, -v         Show detailed information
 ```
 
-## 🔬 **Use Cases**
+## Use Cases
 
 ### AI & Machine Learning
 ```bash
@@ -229,7 +229,7 @@ gpu-text-search server_logs.txt "ERROR" --warmup --verbose
 gpu-text-search large_dataset.csv "target_pattern" --benchmark --iterations 100
 ```
 
-## 📊 **Performance Benchmarks**
+## Performance Benchmarks
 
 ### Real-World Results
 
@@ -243,7 +243,7 @@ gpu-text-search large_dataset.csv "target_pattern" --benchmark --iterations 100
 
 | Tool | Throughput | Use Case Performance |
 |------|------------|---------------------|
-| **GPU Text Search** | **32.3 GB/s** | **Production Ready** ⚡ |
+| **GPU Text Search** | **32.3 GB/s** | **Production Ready** |
 | ripgrep | ~1 GB/s | Good for small files |
 | GNU grep | ~0.2 GB/s | Basic text search |
 | ag (silver searcher) | ~0.5 GB/s | Development use |
@@ -455,4 +455,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ for high-performance text processing**\n
+**Built for high-performance text processing**

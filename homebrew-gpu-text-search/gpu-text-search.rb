@@ -5,8 +5,8 @@ class GpuTextSearch < Formula
   desc "Ultra-high-performance GPU-accelerated text search using Metal compute shaders"
   homepage "https://github.com/teenu/gpu-text-search"
   url "https://github.com/teenu/gpu-text-search.git",
-      tag:      "v1.0.2",
-      revision: "7c0e02253a58c3d2495a6026159bbe2c084f91d4"
+      tag:      "v2.1.1",
+      revision: "c5155881312f7dd2a0c6b21c6830a4a82da3eb9e"
   license "MIT"
   head "https://github.com/teenu/gpu-text-search.git", branch: "main"
 
@@ -19,8 +19,13 @@ class GpuTextSearch < Formula
     system "swift", "build", *args
     bin.install ".build/release/search-cli" => "gpu-text-search"
 
-    # Install the Metal resource bundle alongside the executable
+    # Install the Metal resource bundle alongside the executable for compatibility
     bin.install ".build/release/GPUTextSearch_SearchEngine.bundle"
+  end
+
+  def post_install
+    # Create symlink for bundle in global bin directory to match executable location
+    (HOMEBREW_PREFIX/"bin"/"GPUTextSearch_SearchEngine.bundle").make_symlink(bin/"GPUTextSearch_SearchEngine.bundle")
   end
 
   test do
