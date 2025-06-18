@@ -56,9 +56,13 @@ Transform your text processing workflows with **industry-leading performance**:
 
 ## 📦 **Installation**
 
-### Homebrew (coming soon)
+### Homebrew (Recommended) 🍺
 ```bash
-# Coming soon - brew install gpu-text-search
+# Install directly from formula
+brew install https://raw.githubusercontent.com/teenu/gpu-text-search/main/homebrew/gpu-text-search.rb
+
+# Use as 'gpu-text-search' command
+gpu-text-search file.txt "GATTACA" --verbose
 ```
 
 ### Build from Source
@@ -67,6 +71,14 @@ git clone https://github.com/teenu/gpu-text-search.git
 cd gpu-text-search
 swift build -c release
 cp .build/release/search-cli /usr/local/bin/gpu-text-search
+```
+
+### Pre-compiled Binary
+```bash
+# Download from GitHub Releases
+curl -L -o search-cli https://github.com/teenu/gpu-text-search/releases/latest/download/search-cli
+chmod +x search-cli
+sudo mv search-cli /usr/local/bin/gpu-text-search
 ```
 
 ### System Requirements
