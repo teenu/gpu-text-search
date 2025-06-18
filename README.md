@@ -56,7 +56,7 @@ Transform your text processing workflows with **industry-leading performance**:
 
 ## 📦 **Installation**
 
-### Homebrew (Recommended)
+### Homebrew (coming soon)
 ```bash
 # Coming soon - brew install gpu-text-search
 ```
@@ -288,7 +288,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourorg/gpu-text-search.git", from: "1.0.0")
+    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "1.0.0")
 ]
 ```
 

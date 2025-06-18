@@ -12,7 +12,7 @@ The GPU Text Search project is **production-ready** for distribution:
 - ✅ **Complete test suite** with validation scripts
 - ✅ **MIT License** (community-friendly)
 - ✅ **GitHub-ready files** (CI/CD, issue templates, security policy)
-- ✅ **Homebrew formula** prepared
+- ✅ **Homebrew formula** in progress
 - ✅ **Examples and tutorials** for different use cases
 
 ## 🎯 **Distribution Strategy**
@@ -261,7 +261,7 @@ The GPU Text Search project is **ready for immediate distribution**:
 ### **Distribution Assets**
 - ✅ Enhanced README with installation instructions
 - ✅ GitHub Actions CI/CD pipeline
-- ✅ Homebrew formula ready for submission
+- ✅ Homebrew formula under development
 - ✅ Security policy and contributing guidelines
 - ✅ Issue templates and community docs
 - ✅ Practical examples for different use cases
