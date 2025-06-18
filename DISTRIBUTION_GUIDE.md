@@ -21,7 +21,7 @@ The GPU Text Search project is **production-ready** for distribution:
 1. Create public GitHub repository
 2. Upload all project files
 3. Configure GitHub Actions CI/CD
-4. Create initial release (v2.1.0)
+4. Create initial release (v2.0.0)
 
 ### **Phase 2: Package Managers (Week 2)**
 1. Submit Homebrew formula
@@ -46,7 +46,7 @@ The GPU Text Search project is **production-ready** for distribution:
 2. **Upload the project**:
    ```bash
    cd /path/to/gpu-text-search
-   git remote add origin https://github.com/yourusername/gpu-text-search.git
+   git remote add origin https://github.com/teenu/gpu-text-search.git
    git branch -M main
    git push -u origin main
    ```
@@ -60,14 +60,14 @@ The GPU Text Search project is **production-ready** for distribution:
 
 1. **Tag the current version**:
    ```bash
-   git tag -a v2.1.0 -m "GPU Text Search v2.1.0 - Platinum Edition"
-   git push origin v2.1.0
+   git tag -a v2.0.0 -m "GPU Text Search v2.0.0 - Gilded Edition"
+   git push origin v2.0.0
    ```
 
 2. **Create GitHub Release**:
    - Go to Releases → Create a new release
-   - Tag: `v2.1.0`
-   - Title: `GPU Text Search v2.1.0 "Platinum Edition"`
+   - Tag: `v2.0.0`
+   - Title: `GPU Text Search v2.0.0 "Gilded Edition"`
    - Description: Use content from CHANGELOG.md
    - Upload pre-built binary as release asset
 
@@ -95,13 +95,13 @@ The CI/CD workflow (`.github/workflows/ci.yml`) will automatically:
 3. **Alternative: Create personal tap**:
    ```bash
    # Create tap repository
-   brew tap-new yourusername/gpu-text-search
+   brew tap-new teenu/gpu-text-search
    
    # Copy formula
-   cp homebrew/gpu-text-search.rb $(brew --repository yourusername/gpu-text-search)/Formula/
+   cp homebrew/gpu-text-search.rb $(brew --repository teenu/gpu-text-search)/Formula/
    
    # Publish tap
-   cd $(brew --repository yourusername/gpu-text-search)
+   cd $(brew --repository teenu/gpu-text-search)
    git add . && git commit -m "Add gpu-text-search formula"
    git push origin main
    ```
@@ -169,7 +169,7 @@ Great for:
 - Any text processing workload
 
 Installation: `brew install gpu-text-search` (coming soon)
-GitHub: https://github.com/yourusername/gpu-text-search
+GitHub: https://github.com/teenu/gpu-text-search
 
 Would love feedback from the community! 🙏
 ```
@@ -188,7 +188,7 @@ gpu-text-search --help
 ### **Option 2: Build from Source**
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/gpu-text-search.git
+git clone https://github.com/teenu/gpu-text-search.git
 cd gpu-text-search
 
 # Build release version
@@ -205,11 +205,11 @@ gpu-text-search --help
 ```bash
 # Download from GitHub Releases
 curl -L -o gpu-text-search.tar.gz \
-  https://github.com/yourusername/gpu-text-search/releases/download/v2.1.0/gpu-text-search-v2.1.0-macos.tar.gz
+  https://github.com/teenu/gpu-text-search/releases/download/v2.0.0/gpu-text-search-v2.0.0-macos.tar.gz
 
 # Extract and install
 tar -xzf gpu-text-search.tar.gz
-sudo cp gpu-text-search-v2.1.0/search-cli /usr/local/bin/gpu-text-search
+sudo cp gpu-text-search-v2.0.0/search-cli /usr/local/bin/gpu-text-search
 ```
 
 ## 📊 **Success Metrics**
