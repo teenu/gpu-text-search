@@ -59,51 +59,31 @@ if __name__ == "__main__":
     text_file = sys.argv[2]
     pattern = sys.argv[3]
     
-    print(f"Validating binary export: {binary_file}")
-    print(f"Text file: {text_file}")
-    print(f"Pattern: '{pattern}'")
-    print()
+    print(f"Validating: {binary_file} for pattern '{pattern}'")
     
-    # Read binary positions
+    # Read and validate positions
     binary_positions = read_binary_positions(binary_file)
-    print(f"Binary file contains {len(binary_positions)} positions: {binary_positions}")
-    
-    # Get grep positions for comparison
     grep_positions = get_grep_positions(text_file, pattern)
-    print(f"Grep found {len(grep_positions)} positions: {grep_positions}")
-    
-    # Manually validate each position
     valid_positions = validate_positions_in_file(text_file, pattern, binary_positions)
-    print(f"Manually validated {len(valid_positions)} positions: {valid_positions}")
+    
+    print(f"Binary: {len(binary_positions)}, Grep: {len(grep_positions)}, Valid: {len(valid_positions)}")
     
     # Compare results (sort for comparison since order may differ)
     binary_sorted = sorted(binary_positions)
     grep_sorted = sorted(grep_positions)
     valid_sorted = sorted(valid_positions)
     
-    print("\n=== VALIDATION RESULTS ===")
+    # Results
     if binary_sorted == grep_sorted == valid_sorted:
-        print("✅ PERFECT MATCH: All methods agree!")
-        print(f"✅ All {len(binary_positions)} positions are correct")
-        print(f"✅ Sorted positions: {binary_sorted}")
+        print("✅ Perfect match: All positions correct")
+    elif set(binary_positions) == set(grep_positions) == set(valid_positions):
+        print("✅ Content match: Same positions, different order (GPU parallelism)")
     else:
-        print("❌ MISMATCH DETECTED:")
+        print("❌ Validation failed")
         if set(binary_positions) != set(grep_positions):
-            print(f"❌ Binary vs Grep: {set(binary_positions) - set(grep_positions)} extra in binary")
-            print(f"❌ Grep vs Binary: {set(grep_positions) - set(binary_positions)} extra in grep")
-        if set(binary_positions) != set(valid_positions):
-            print(f"❌ Binary positions validation failed")
-            
-    # Check if just ordering differs
-    if set(binary_positions) == set(grep_positions) == set(valid_positions):
-        print("✅ CONTENT MATCH: Same positions, different order (GPU thread execution order)")
-        print(f"✅ Binary order: {binary_positions}")
-        print(f"✅ Grep order: {grep_positions}")
+            print(f"   Binary-Grep diff: {len(set(binary_positions) ^ set(grep_positions))} positions")
     
-    print(f"\nFile size validation:")
-    expected_size = len(binary_positions) * 4  # 4 bytes per UInt32
+    # File size check
+    expected_size = len(binary_positions) * 4
     actual_size = len(open(binary_file, 'rb').read())
-    if expected_size == actual_size:
-        print(f"✅ File size correct: {actual_size} bytes")
-    else:
-        print(f"❌ File size mismatch: expected {expected_size}, got {actual_size}")
+    print(f"File size: {'✅' if expected_size == actual_size else '❌'} {actual_size} bytes")

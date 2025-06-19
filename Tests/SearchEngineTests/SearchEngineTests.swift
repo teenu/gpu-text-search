@@ -41,57 +41,15 @@ final class SearchEngineTests: XCTestCase {
     }
     
     func testBasicSearch() {
-        let testString = "Hello, World! Hello again!"
-        let tempFile = createTempFile(content: testString)
-        defer { removeTempFile(tempFile) }
-        
-        do {
-            try engine.mapFile(at: tempFile)
-            let result = try engine.search(pattern: "Hello")
-            
-            XCTAssertEqual(result.matchCount, 2)
-            XCTAssertEqual(result.positions.count, 2)
-            XCTAssertEqual(result.positions[0], 0)  // First "Hello" at position 0
-            XCTAssertEqual(result.positions[1], 14) // Second "Hello" at position 14
-            XCTAssertFalse(result.truncated)
-            XCTAssertGreaterThan(result.throughputMBps, 0)
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        performSearch(content: "Hello, World! Hello again!", pattern: "Hello", expectedCount: 2, expectedPositions: [0, 14])
     }
     
     func testSingleCharacterSearch() {
-        let testString = "abacadaba"
-        let tempFile = createTempFile(content: testString)
-        defer { removeTempFile(tempFile) }
-        
-        do {
-            try engine.mapFile(at: tempFile)
-            let result = try engine.search(pattern: "a")
-            
-            XCTAssertEqual(result.matchCount, 5) // 'a' appears 5 times
-            XCTAssertEqual(result.positions.count, 5)
-            XCTAssertEqual(result.positions, [0, 2, 4, 6, 8])
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        performSearch(content: "abacadaba", pattern: "a", expectedCount: 5, expectedPositions: [0, 2, 4, 6, 8])
     }
     
     func testNoMatches() {
-        let testString = "Hello, World!"
-        let tempFile = createTempFile(content: testString)
-        defer { removeTempFile(tempFile) }
-        
-        do {
-            try engine.mapFile(at: tempFile)
-            let result = try engine.search(pattern: "xyz")
-            
-            XCTAssertEqual(result.matchCount, 0)
-            XCTAssertEqual(result.positions.count, 0)
-            XCTAssertFalse(result.truncated)
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        performSearch(content: "Hello, World!", pattern: "xyz", expectedCount: 0, expectedPositions: [])
     }
     
     func testEmptyFile() {
@@ -152,5 +110,26 @@ final class SearchEngineTests: XCTestCase {
     
     private func removeTempFile(_ url: URL) {
         try? FileManager.default.removeItem(at: url)
+    }
+    
+    private func performSearch(content: String, pattern: String, expectedCount: UInt32, expectedPositions: [UInt32]? = nil) {
+        let tempFile = createTempFile(content: content)
+        defer { removeTempFile(tempFile) }
+        
+        do {
+            try engine.mapFile(at: tempFile)
+            let result = try engine.search(pattern: pattern)
+            
+            XCTAssertEqual(result.matchCount, expectedCount, "Match count mismatch for pattern '\(pattern)'")
+            if let positions = expectedPositions {
+                XCTAssertEqual(result.positions, positions, "Position mismatch for pattern '\(pattern)'")
+            }
+            XCTAssertFalse(result.truncated)
+            if expectedCount > 0 {
+                XCTAssertGreaterThan(result.throughputMBps, 0)
+            }
+        } catch {
+            XCTFail("Unexpected error for pattern '\(pattern)': \(error)")
+        }
     }
 }

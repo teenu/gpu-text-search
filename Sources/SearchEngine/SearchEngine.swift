@@ -499,18 +499,9 @@ public final class SearchEngine {
         countPtr.pointee = 0
     }
     
-    // MARK: - Search Execution
+    // MARK: - Pattern Validation
     
-    /// Perform a text search for the specified pattern
-    /// - Parameter pattern: The text pattern to search for
-    /// - Returns: SearchResult containing match information
-    /// - Throws: SearchEngineError if search fails
-    public func search(pattern: String) throws -> SearchResult {
-        guard isFileMapped else {
-            throw SearchEngineError.noFileMapped
-        }
-        
-        // Validate pattern once at entry point
+    private func validatePattern(_ pattern: String) throws {
         guard !pattern.isEmpty else {
             throw SearchEngineError.invalidPattern("Pattern cannot be empty")
         }
@@ -522,6 +513,20 @@ public final class SearchEngine {
         guard pattern.data(using: .utf8) != nil else {
             throw SearchEngineError.invalidPattern("Pattern failed to encode as UTF-8")
         }
+    }
+    
+    // MARK: - Search Execution
+    
+    /// Perform a text search for the specified pattern
+    /// - Parameter pattern: The text pattern to search for
+    /// - Returns: SearchResult containing match information
+    /// - Throws: SearchEngineError if search fails
+    public func search(pattern: String) throws -> SearchResult {
+        guard isFileMapped else {
+            throw SearchEngineError.noFileMapped
+        }
+        
+        try validatePattern(pattern)
         
         // Handle empty files
         if mappedFileLength == 0 {
@@ -721,7 +726,14 @@ public final class SearchEngine {
         }
         
         let fileHandle = try FileHandle(forWritingTo: url)
-        defer { try? fileHandle.close() }
+        defer { 
+            do {
+                try fileHandle.close()
+            } catch {
+                // Log error but don't throw - defer block cannot throw
+                print("Warning: Failed to close file handle for \(url.path): \(error)")
+            }
+        }
         
         // Direct binary write from Metal buffer (zero-copy)
         let positionsDataPtr = positionsBuffer.contents()

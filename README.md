@@ -8,7 +8,7 @@
 [![Swift Version](https://img.shields.io/badge/swift-6.1+-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Release](https://img.shields.io/badge/release-v2.1.2-blue.svg)](https://github.com/teenu/gpu-text-search/releases/tag/v2.1.2)
+[![Release](https://img.shields.io/badge/release-v2.1.3-blue.svg)](https://github.com/teenu/gpu-text-search/releases/tag/v2.1.3)
 
 ---
 
@@ -58,10 +58,8 @@ Transform your text processing workflows with **industry-leading performance**:
 
 ### Homebrew (Recommended)
 ```bash
-# Add the tap
+# Add the tap and install
 brew tap teenu/gpu-text-search
-
-# Install gpu-text-search
 brew install gpu-text-search
 
 # Or install directly in one command

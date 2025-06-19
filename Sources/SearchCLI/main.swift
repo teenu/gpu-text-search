@@ -2,10 +2,63 @@ import Foundation
 import ArgumentParser
 import SearchEngine
 
-// Shared helper to display bytes in human-readable format
+// MARK: - Shared Utilities
+
 func formatFileSize(_ bytes: Int) -> String {
     let mb = Double(bytes) / (1024.0 * 1024.0)
     return String(format: "%.2f MB (%lld bytes)", mb, Int64(bytes))
+}
+
+func validateFileExists(_ path: String) throws {
+    guard FileManager.default.fileExists(atPath: path) else {
+        throw ValidationError("File does not exist: \(path)")
+    }
+}
+
+func validateIterations(_ iterations: Int, max: Int = 10000) throws {
+    guard iterations > 0 else {
+        throw ValidationError("Iterations must be greater than 0")
+    }
+    guard iterations <= max else {
+        throw ValidationError("Iterations must not exceed \(max)")
+    }
+}
+
+func initializeEngine(verbose: Bool, quiet: Bool = false) throws -> SearchEngine {
+    if verbose && !quiet {
+        print("Initializing Metal GPU search engine...")
+    }
+    return try SearchEngine()
+}
+
+func mapFile(engine: SearchEngine, path: String, verbose: Bool, quiet: Bool = false) throws {
+    if verbose && !quiet {
+        print("Mapping file: \(path)")
+    }
+    try engine.mapFile(at: URL(fileURLWithPath: path))
+    
+    if verbose && !quiet {
+        print("File size: \(formatFileSize(engine.fileSize))")
+        print("GPU: \(engine.gpuName)")
+    }
+}
+
+// Numerically stable standard deviation calculation using Welford's algorithm
+func calculateStandardDeviation(_ values: [TimeInterval]) -> TimeInterval {
+    guard values.count > 1 else { return 0 }
+    var mean: Double = 0
+    var m2: Double = 0
+    var count: Double = 0
+    
+    for value in values {
+        count += 1
+        let delta = value - mean
+        mean += delta / count
+        let delta2 = value - mean
+        m2 += delta * delta2
+    }
+    
+    return sqrt(m2 / (count - 1))
 }
 
 // MARK: - Main CLI Application
@@ -64,27 +117,12 @@ struct Search: ParsableCommand {
     }
     
     func run() throws {
-        let fileURL = URL(fileURLWithPath: file)
-        guard FileManager.default.fileExists(atPath: file) else {
-            throw ValidationError("File does not exist: \(file)")
-        }
+        try validateFileExists(file)
         
-        // Initialize search engine
-        if verbose && !quiet {
-            print("Initializing Metal GPU search engine...")
-        }
-        let engine = try SearchEngine()
+        let engine = try initializeEngine(verbose: verbose, quiet: quiet)
+        try mapFile(engine: engine, path: file, verbose: verbose, quiet: quiet)
         
-        // Map file
         if verbose && !quiet {
-            print("Mapping file: \(file)")
-        }
-        try engine.mapFile(at: fileURL)
-        
-        // Show file information
-        if verbose && !quiet {
-            print("File size: \(formatFileSize(engine.fileSize))")
-            print("GPU: \(engine.gpuName)")
             print("Searching for pattern: '\(pattern)'")
         }
         
@@ -171,19 +209,11 @@ struct Benchmark: ParsableCommand {
     var noWarmup = false
     
     func validate() throws {
-        guard iterations > 0 else {
-            throw ValidationError("Iterations must be greater than 0")
-        }
-        guard iterations <= 10000 else {
-            throw ValidationError("Iterations must not exceed 10,000")
-        }
+        try validateIterations(iterations)
     }
     
     func run() throws {
-        let fileURL = URL(fileURLWithPath: file)
-        guard FileManager.default.fileExists(atPath: file) else {
-            throw ValidationError("File does not exist: \(file)")
-        }
+        try validateFileExists(file)
         
         let useWarmup = !noWarmup
         
@@ -197,7 +227,7 @@ struct Benchmark: ParsableCommand {
         }
         
         let engine = try SearchEngine()
-        let benchmark = try engine.benchmark(file: fileURL, pattern: pattern, iterations: iterations, warmup: useWarmup)
+        let benchmark = try engine.benchmark(file: URL(fileURLWithPath: file), pattern: pattern, iterations: iterations, warmup: useWarmup)
         
         if csv {
             printCSVResults(benchmark)
@@ -254,12 +284,6 @@ struct Benchmark: ParsableCommand {
         }
     }
     
-    private func calculateStandardDeviation(_ values: [TimeInterval]) -> TimeInterval {
-        guard values.count > 1 else { return 0 }
-        let mean = values.reduce(0, +) / Double(values.count)
-        let variance = values.map { pow($0 - mean, 2) }.reduce(0, +) / Double(values.count - 1)
-        return sqrt(variance)
-    }
 }
 
 // MARK: - Profile Command
@@ -282,19 +306,11 @@ struct Profile: ParsableCommand {
     var patterns: String?
     
     func validate() throws {
-        guard iterations > 0 else {
-            throw ValidationError("Iterations must be greater than 0")
-        }
-        guard iterations <= 1000 else {
-            throw ValidationError("Iterations must not exceed 1,000 for profiling")
-        }
+        try validateIterations(iterations, max: 1000)
     }
     
     func run() throws {
-        let fileURL = URL(fileURLWithPath: file)
-        guard FileManager.default.fileExists(atPath: file) else {
-            throw ValidationError("File does not exist: \(file)")
-        }
+        try validateFileExists(file)
         
         let testPatterns: [String]
         if let customPatterns = patterns {
@@ -318,7 +334,7 @@ struct Profile: ParsableCommand {
         }
         
         let engine = try SearchEngine()
-        try engine.mapFile(at: fileURL)
+        try engine.mapFile(at: URL(fileURLWithPath: file))
         
         // Print header
         print("Pattern\t\tLength\tMatches\tAvg Time(s)\tThroughput(MB/s)\tMin(s)\tMax(s)")
