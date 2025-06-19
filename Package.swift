@@ -25,7 +25,7 @@ let package = Package(
         // MARK: - External Dependencies
         .package(
             url: "https://github.com/apple/swift-argument-parser.git",
-            from: "1.2.0"
+            from: "1.5.0"
         ),
     ],
     targets: [
@@ -37,11 +37,20 @@ let package = Package(
                 .process("SearchKernel.metal")
             ],
             swiftSettings: [
+                // Future Swift features for better performance and safety
                 .enableUpcomingFeature("BareSlashRegexLiterals"),
                 .enableUpcomingFeature("ConciseMagicFile"),
                 .enableUpcomingFeature("ForwardTrailingClosures"),
                 .enableUpcomingFeature("StrictConcurrency"),
-                .enableExperimentalFeature("StrictConcurrency")
+                .enableExperimentalFeature("StrictConcurrency"),
+                
+                // Performance optimizations
+                .unsafeFlags([
+                    "-O",                           // Optimize for speed
+                    "-whole-module-optimization",   // Cross-module optimization
+                    "-cross-module-optimization",   // Enhanced cross-module optimization
+                    "-enforce-exclusivity=unchecked" // Disable memory exclusivity checking for performance
+                ], .when(configuration: .release))
             ]
         ),
         
@@ -53,11 +62,20 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             swiftSettings: [
+                // Future Swift features for better performance and safety
                 .enableUpcomingFeature("BareSlashRegexLiterals"),
                 .enableUpcomingFeature("ConciseMagicFile"), 
                 .enableUpcomingFeature("ForwardTrailingClosures"),
                 .enableUpcomingFeature("StrictConcurrency"),
-                .enableExperimentalFeature("StrictConcurrency")
+                .enableExperimentalFeature("StrictConcurrency"),
+                
+                // Performance optimizations
+                .unsafeFlags([
+                    "-O",                           // Optimize for speed
+                    "-whole-module-optimization",   // Cross-module optimization
+                    "-cross-module-optimization",   // Enhanced cross-module optimization
+                    "-enforce-exclusivity=unchecked" // Disable memory exclusivity checking for performance
+                ], .when(configuration: .release))
             ]
         ),
         

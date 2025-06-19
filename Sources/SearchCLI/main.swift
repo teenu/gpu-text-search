@@ -264,7 +264,11 @@ struct Benchmark: ParsableCommand {
         // Check consistency
         let matchCounts = Set(benchmark.results.map(\.matchCount))
         if matchCounts.count == 1 {
-            print("✅ Results consistent: All iterations found \(matchCounts.first!) matches")
+            if let consistentCount = matchCounts.first {
+                print("✅ Results consistent: All iterations found \(consistentCount) matches")
+            } else {
+                print("⚠️  Results consistent but empty result set")
+            }
         } else {
             print("⚠️  Results inconsistent: Found \(matchCounts.count) different match counts")
         }

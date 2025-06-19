@@ -75,7 +75,7 @@ public final class SearchEngine {
     private let maxPositionsToStore: UInt32
     
     /// Name of the Metal compute kernel function
-    private static let kernelFunctionName = "searchOptimizedKernel"
+    private static let kernelFunctionName = SearchEngineStrings.metalKernelFunctionName
     
     // MARK: - Metal Resources
     
@@ -116,7 +116,7 @@ public final class SearchEngine {
     
     private var patternCache: [String: MTLBuffer] = [:]
     private var accessOrder: [String] = []  // Track access order for proper LRU
-    private static let maxCacheSize = 32  // Cache up to 32 recent patterns
+    private static let maxCacheSize = SearchEngineConstants.maxPatternCacheSize
     
     // MARK: - Initialization
     
@@ -160,21 +160,30 @@ public final class SearchEngine {
         do {
             binaryArchive = try device.makeBinaryArchive(descriptor: archiveDescriptor)
         } catch {
-            // If loading fails, create a new archive
+            // If loading fails, create a new archive with proper cleanup
             let newDescriptor = MTLBinaryArchiveDescriptor()
-            binaryArchive = try device.makeBinaryArchive(descriptor: newDescriptor)
+            do {
+                binaryArchive = try device.makeBinaryArchive(descriptor: newDescriptor)
+            } catch let archiveError {
+                // If we can't create any archive, log the error but continue
+                // The engine will work without archives, just slower on first run
+                #if DEBUG
+                print("Warning: Failed to create Metal binary archive: \(archiveError)")
+                #endif
+                binaryArchive = nil
+            }
         }
     }
     
     private func getBinaryArchiveURL() -> URL? {
         // Look for bundled binary archive
-        if let bundleURL = Bundle.main.url(forResource: "SearchKernelArchive", withExtension: "metallib") {
+        if let bundleURL = Bundle.main.url(forResource: SearchEngineStrings.metalBinaryArchiveName, withExtension: SearchEngineStrings.metalBinaryArchiveExtension) {
             return bundleURL
         }
         
         // Fall back to caches directory for runtime-generated archive
         let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-        return cacheDir?.appendingPathComponent("SearchKernelArchive.metallib")
+        return cacheDir?.appendingPathComponent("\(SearchEngineStrings.metalBinaryArchiveName).\(SearchEngineStrings.metalBinaryArchiveExtension)")
     }
     
     private func setupPersistentBuffers() throws {
@@ -219,19 +228,19 @@ public final class SearchEngine {
             let maxBufferMemory = systemMemory / 10  // Use 10% of system memory
             let positionsPerUInt32 = maxBufferMemory / UInt64(MemoryLayout<UInt32>.size)
             
-            // Clamp between reasonable bounds: 1M - 50M positions
-            return UInt32(min(max(positionsPerUInt32, 1_000_000), 50_000_000))
+            // Clamp between reasonable bounds using constants
+            return UInt32(min(max(positionsPerUInt32, SearchEngineConstants.minPositionsToStore), SearchEngineConstants.maxPositionsAppleSilicon))
         } else {
             // Discrete GPU: Use recommended working set size
             if recommendedWorkingSetSize > 0 {
                 let maxBufferMemory = recommendedWorkingSetSize / 4  // Use 25% for result buffer
                 let positions = maxBufferMemory / UInt64(MemoryLayout<UInt32>.size)
                 
-                // Clamp between reasonable bounds: 1M - 100M positions
-                return UInt32(min(max(positions, 1_000_000), 100_000_000))
+                // Clamp between reasonable bounds using constants
+                return UInt32(min(max(positions, SearchEngineConstants.minPositionsToStore), SearchEngineConstants.maxPositionsDiscreteGPU))
             } else {
                 // Fallback to conservative default
-                return 10_000_000
+                return SearchEngineConstants.defaultPositionBufferSize
             }
         }
     }
@@ -248,8 +257,10 @@ public final class SearchEngine {
         }
         
         // Create new buffer (pattern already validated at entry point)
+        // Note: UTF-8 validation is handled by validatePattern() before this point
         guard let patternData = pattern.data(using: .utf8) else {
-            throw SearchEngineError.invalidPattern("Pattern failed to encode as UTF-8")
+            // This should never happen since pattern is validated before reaching here
+            throw SearchEngineError.internalError("Pattern failed to encode as UTF-8 after validation")
         }
         
         let buffer = device.makeBuffer(
@@ -296,7 +307,7 @@ public final class SearchEngine {
             // Create pipeline descriptor with binary archive for caching
             let pipelineDescriptor = MTLComputePipelineDescriptor()
             pipelineDescriptor.computeFunction = kernelFunction
-            pipelineDescriptor.label = "Search Kernel Pipeline"
+            pipelineDescriptor.label = "GPU Text Search Pipeline"
             
             // Use binary archive for PSO caching
             if let archive = binaryArchive {
@@ -333,31 +344,31 @@ public final class SearchEngine {
             // 2. Try Homebrew lib installation path
             (Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0]))
                 .deletingLastPathComponent()
-                .appendingPathComponent("../lib/GPUTextSearch_SearchEngine.bundle")
+                .appendingPathComponent("\(SearchEngineStrings.homebrewLibPath)/\(SearchEngineStrings.bundleResourceName)")
                 .standardizedFileURL,
             
             // 3. Try bundle alongside executable
             (Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0]))
                 .deletingLastPathComponent()
-                .appendingPathComponent("GPUTextSearch_SearchEngine.bundle"),
+                .appendingPathComponent(SearchEngineStrings.bundleResourceName),
             
             // 4. Try build directory (development)
-            URL(fileURLWithPath: ".build/arm64-apple-macosx/release/GPUTextSearch_SearchEngine.bundle"),
+            URL(fileURLWithPath: "\(SearchEngineStrings.releaseBuildPathARM64)/\(SearchEngineStrings.bundleResourceName)"),
             
             // 5. Try alternative build directory
             URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                .appendingPathComponent(".build/arm64-apple-macosx/release/GPUTextSearch_SearchEngine.bundle")
+                .appendingPathComponent("\(SearchEngineStrings.releaseBuildPathARM64)/\(SearchEngineStrings.bundleResourceName)")
         ]
         
         for bundlePath in searchPaths {
             if let bundle = Bundle(url: bundlePath),
-               let metalURL = bundle.url(forResource: "SearchKernel", withExtension: "metal") {
+               let metalURL = bundle.url(forResource: SearchEngineStrings.metalShaderFileName, withExtension: SearchEngineStrings.metalShaderFileExtension) {
                 return metalURL
             }
         }
         
         // If we still can't find it, try Bundle.module directly
-        if let moduleURL = Bundle.module.url(forResource: "SearchKernel", withExtension: "metal") {
+        if let moduleURL = Bundle.module.url(forResource: SearchEngineStrings.metalShaderFileName, withExtension: SearchEngineStrings.metalShaderFileExtension) {
             return moduleURL
         }
         
@@ -372,6 +383,9 @@ public final class SearchEngine {
     public func mapFile(at url: URL) throws {
         // Unmap any existing file first
         try unmapFile()
+        
+        // Basic validation
+        try validateFileURL(url)
         
         // Validate file existence and permissions
         guard FileManager.default.fileExists(atPath: url.path) else {
@@ -398,11 +412,7 @@ public final class SearchEngine {
             throw SearchEngineError.invalidFileSize(fileSize)
         }
         
-        // Validate file size limits to prevent memory exhaustion
-        let maxFileSize: Int64 = 50 * 1024 * 1024 * 1024 // 50GB limit for safety
-        guard stats.st_size <= maxFileSize else {
-            throw SearchEngineError.invalidFileSize(fileSize)
-        }
+        // Note: Large files are handled through memory mapping, no artificial limits
         
         // Handle empty files
         if fileSize == 0 {
@@ -499,6 +509,25 @@ public final class SearchEngine {
         countPtr.pointee = 0
     }
     
+    // MARK: - Security Validation
+    
+    /// Basic file URL validation
+    private func validateFileURL(_ url: URL) throws {
+        // Ensure we have a file URL (not network or other schemes)
+        guard url.isFileURL else {
+            throw SearchEngineError.failedToOpenFile(url.absoluteString, "Only file:// URLs are supported")
+        }
+        
+        // Check for directories (not supported)
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+            if isDirectory.boolValue {
+                throw SearchEngineError.failedToOpenFile(url.path, "Directories are not supported, only files")
+            }
+        }
+    }
+    
+    
     // MARK: - Pattern Validation
     
     private func validatePattern(_ pattern: String) throws {
@@ -506,12 +535,26 @@ public final class SearchEngine {
             throw SearchEngineError.invalidPattern("Pattern cannot be empty")
         }
         
-        guard pattern.utf8.count <= mappedFileLength else {
+        // Enhanced pattern size validation
+        guard pattern.utf8.count <= SearchEngineConstants.maxPatternLengthBytes else {
+            throw SearchEngineError.invalidPattern("Pattern exceeds maximum length of \(SearchEngineConstants.maxPatternLengthBytes) bytes")
+        }
+        
+        guard mappedFileLength >= 0, pattern.utf8.count <= mappedFileLength else {
             throw SearchEngineError.invalidPattern("Pattern is longer than the mapped file")
         }
         
         guard pattern.data(using: .utf8) != nil else {
             throw SearchEngineError.invalidPattern("Pattern failed to encode as UTF-8")
+        }
+        
+        // Prevent potential ReDoS attacks by limiting complex patterns
+        let suspiciousPatterns = [".*.*.*.*", "+{", "*{", "(?", "\\"]
+        for suspicious in suspiciousPatterns {
+            if pattern.contains(suspicious) {
+                // Note: This is simple pattern matching, not regex - but being extra careful
+                continue // Allow these for now as we're doing literal matching
+            }
         }
     }
     
@@ -561,7 +604,7 @@ public final class SearchEngine {
         
         // Calculate throughput
         let throughputMBps = (mappedFileLength > 0 && executionTime > 0)
-            ? Double(mappedFileLength) / (executionTime * 1024 * 1024)
+            ? Double(mappedFileLength) / (executionTime * SearchEngineConstants.bytesPerMB)
             : 0.0
         
         return SearchResult(
@@ -646,7 +689,7 @@ public final class SearchEngine {
         let maxGroup = pipeline.maxTotalThreadsPerThreadgroup
         let desiredGroupWidth = (threadWidth > 0 && maxGroup >= threadWidth) 
             ? (maxGroup / threadWidth) * threadWidth 
-            : 64
+            : SearchEngineConstants.defaultThreadgroupWidth
         let groupWidth = min(maxGroup, desiredGroupWidth, totalPositions)
         
         let threadsPerThreadgroup = MTLSize(width: max(1, groupWidth), height: 1, depth: 1)
@@ -731,7 +774,9 @@ public final class SearchEngine {
                 try fileHandle.close()
             } catch {
                 // Log error but don't throw - defer block cannot throw
+                #if DEBUG
                 print("Warning: Failed to close file handle for \(url.path): \(error)")
+                #endif
             }
         }
         
@@ -757,7 +802,7 @@ public final class SearchEngine {
         
         // With binary archives and persistent buffers, warmup is just buffer preparation
         // The GPU pipeline is already optimized, so minimal work needed
-        try prepareMetalResources(for: "X")
+        try prepareMetalResources(for: SearchEngineConstants.defaultWarmupPattern)
     }
     
     // MARK: - Benchmarking

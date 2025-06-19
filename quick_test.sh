@@ -59,4 +59,4 @@ echo "  • Profile performance: .build/release/search-cli profile test_file.txt
 echo "  • Test binary export: .build/release/search-cli search test_file.txt \"Hello\" --export-binary positions.bin"
 echo ""
 echo "For detailed usage instructions, see: README.md"
-echo "For deployment guidelines, see: DEPLOYMENT_GUIDE.md"
+echo "For development guidelines, see: CLAUDE.md"

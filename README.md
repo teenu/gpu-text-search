@@ -301,7 +301,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "1.0.0")
+    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.1.3")
 ]
 ```
 
@@ -344,7 +344,11 @@ func benchmarkSearch() throws {
     
     print("Average: \(benchmark.averageTime)s")
     print("Throughput: \(benchmark.averageThroughput) MB/s")
-    print("Std dev: \(benchmark.standardDeviation)s")
+    
+    // Calculate standard deviation manually if needed
+    let times = benchmark.results.map(\.executionTime)
+    let stdDev = calculateStandardDeviation(times)
+    print("Std dev: \(stdDev)s")
 }
 ```
 
