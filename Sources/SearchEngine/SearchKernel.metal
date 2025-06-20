@@ -29,21 +29,36 @@ kernel void searchOptimizedKernel(
     if (patternLen == 1) {
         found = (textPtr[0] == patternPtr[0]);
     } 
-    // Vectorized comparison for 2-byte patterns
+    // Vectorized comparison for 2-byte patterns (endianness-safe)
     else if (patternLen == 2) {
-        // Use 16-bit comparison for better memory throughput
-        const ushort textChars = *reinterpret_cast<device const ushort*>(textPtr);
-        const ushort patternChars = *reinterpret_cast<device const ushort*>(patternPtr);
-        found = (textChars == patternChars);
+        // Check 2-byte alignment before vectorized access
+        if (((ulong)textPtr % 2 == 0) && ((ulong)patternPtr % 2 == 0)) {
+            // Safe: Both text and pattern use same endianness and memory layout
+            const ushort textChars = *reinterpret_cast<device const ushort*>(textPtr);
+            const ushort patternChars = *reinterpret_cast<device const ushort*>(patternPtr);
+            found = (textChars == patternChars);
+        } else {
+            // Fallback to byte-by-byte comparison for unaligned access
+            found = (textPtr[0] == patternPtr[0]) && (textPtr[1] == patternPtr[1]);
+        }
     }
-    // Vectorized comparison for 4-byte patterns
+    // Vectorized comparison for 4-byte patterns (endianness-safe)
     else if (patternLen == 4) {
-        // Use 32-bit comparison for maximum memory throughput
-        const uint textChars = *reinterpret_cast<device const uint*>(textPtr);
-        const uint patternChars = *reinterpret_cast<device const uint*>(patternPtr);
-        found = (textChars == patternChars);
+        // Check 4-byte alignment before vectorized access
+        if (((ulong)textPtr % 4 == 0) && ((ulong)patternPtr % 4 == 0)) {
+            // Safe: Both text and pattern use same endianness and memory layout
+            const uint textChars = *reinterpret_cast<device const uint*>(textPtr);
+            const uint patternChars = *reinterpret_cast<device const uint*>(patternPtr);
+            found = (textChars == patternChars);
+        } else {
+            // Fallback to byte-by-byte comparison for unaligned access
+            found = (textPtr[0] == patternPtr[0]) && 
+                    (textPtr[1] == patternPtr[1]) && 
+                    (textPtr[2] == patternPtr[2]) && 
+                    (textPtr[3] == patternPtr[3]);
+        }
     }
-    // Optimized unrolled loops for common pattern lengths (3, 5-8 chars)
+    // Optimized unrolled loops for common pattern lengths (3, 5-15 chars)
     else if (patternLen == 3) {
         found = (textPtr[0] == patternPtr[0]) && 
                 (textPtr[1] == patternPtr[1]) && 
@@ -74,11 +89,24 @@ kernel void searchOptimizedKernel(
                 (textPtr[6] == patternPtr[6]);
     }
     else if (patternLen == 8) {
-        // Use 64-bit comparison for 8-byte patterns when possible
+        // Use 64-bit comparison for 8-byte patterns (endianness-safe)
         #if __METAL_VERSION__ >= 230
-        const ulong textChars = *reinterpret_cast<device const ulong*>(textPtr);
-        const ulong patternChars = *reinterpret_cast<device const ulong*>(patternPtr);
-        found = (textChars == patternChars);
+        if (((ulong)textPtr % 8 == 0) && ((ulong)patternPtr % 8 == 0)) {
+            // Safe: Both text and pattern use same endianness and memory layout
+            const ulong textChars = *reinterpret_cast<device const ulong*>(textPtr);
+            const ulong patternChars = *reinterpret_cast<device const ulong*>(patternPtr);
+            found = (textChars == patternChars);
+        } else {
+            // Fallback to unrolled comparison for unaligned access
+            found = (textPtr[0] == patternPtr[0]) && 
+                    (textPtr[1] == patternPtr[1]) && 
+                    (textPtr[2] == patternPtr[2]) && 
+                    (textPtr[3] == patternPtr[3]) && 
+                    (textPtr[4] == patternPtr[4]) && 
+                    (textPtr[5] == patternPtr[5]) && 
+                    (textPtr[6] == patternPtr[6]) && 
+                    (textPtr[7] == patternPtr[7]);
+        }
         #else
         // Fallback to unrolled comparison
         found = (textPtr[0] == patternPtr[0]) && 
@@ -89,6 +117,152 @@ kernel void searchOptimizedKernel(
                 (textPtr[5] == patternPtr[5]) && 
                 (textPtr[6] == patternPtr[6]) && 
                 (textPtr[7] == patternPtr[7]);
+        #endif
+    }
+    // Optimized paths for 9-15 byte patterns (hybrid vectorization)
+    else if (patternLen == 9) {
+        // Use 8-byte + 1-byte comparison
+        if (((ulong)textPtr % 8 == 0) && ((ulong)patternPtr % 8 == 0)) {
+            const ulong textChars = *reinterpret_cast<device const ulong*>(textPtr);
+            const ulong patternChars = *reinterpret_cast<device const ulong*>(patternPtr);
+            found = (textChars == patternChars) && (textPtr[8] == patternPtr[8]);
+        } else {
+            found = true;
+            for (uint i = 0; i < 9 && found; i++) {
+                found = (textPtr[i] == patternPtr[i]);
+            }
+        }
+    }
+    else if (patternLen == 10) {
+        // Use 8-byte + 2-byte comparison
+        if (((ulong)textPtr % 8 == 0) && ((ulong)patternPtr % 8 == 0)) {
+            const ulong textChars1 = *reinterpret_cast<device const ulong*>(textPtr);
+            const ulong patternChars1 = *reinterpret_cast<device const ulong*>(patternPtr);
+            if (((ulong)(textPtr + 8) % 2 == 0) && ((ulong)(patternPtr + 8) % 2 == 0)) {
+                const ushort textChars2 = *reinterpret_cast<device const ushort*>(textPtr + 8);
+                const ushort patternChars2 = *reinterpret_cast<device const ushort*>(patternPtr + 8);
+                found = (textChars1 == patternChars1) && (textChars2 == patternChars2);
+            } else {
+                found = (textChars1 == patternChars1) && 
+                       (textPtr[8] == patternPtr[8]) && (textPtr[9] == patternPtr[9]);
+            }
+        } else {
+            found = true;
+            for (uint i = 0; i < 10 && found; i++) {
+                found = (textPtr[i] == patternPtr[i]);
+            }
+        }
+    }
+    else if (patternLen == 12) {
+        // Use 8-byte + 4-byte comparison
+        if (((ulong)textPtr % 8 == 0) && ((ulong)patternPtr % 8 == 0)) {
+            const ulong textChars1 = *reinterpret_cast<device const ulong*>(textPtr);
+            const ulong patternChars1 = *reinterpret_cast<device const ulong*>(patternPtr);
+            if (((ulong)(textPtr + 8) % 4 == 0) && ((ulong)(patternPtr + 8) % 4 == 0)) {
+                const uint textChars2 = *reinterpret_cast<device const uint*>(textPtr + 8);
+                const uint patternChars2 = *reinterpret_cast<device const uint*>(patternPtr + 8);
+                found = (textChars1 == patternChars1) && (textChars2 == patternChars2);
+            } else {
+                found = (textChars1 == patternChars1) && 
+                       (textPtr[8] == patternPtr[8]) && (textPtr[9] == patternPtr[9]) &&
+                       (textPtr[10] == patternPtr[10]) && (textPtr[11] == patternPtr[11]);
+            }
+        } else {
+            found = true;
+            for (uint i = 0; i < 12 && found; i++) {
+                found = (textPtr[i] == patternPtr[i]);
+            }
+        }
+    }
+    else if (patternLen >= 13 && patternLen <= 15) {
+        // Use 8-byte + remaining bytes for 13-15 byte patterns
+        if (((ulong)textPtr % 8 == 0) && ((ulong)patternPtr % 8 == 0)) {
+            const ulong textChars = *reinterpret_cast<device const ulong*>(textPtr);
+            const ulong patternChars = *reinterpret_cast<device const ulong*>(patternPtr);
+            found = (textChars == patternChars);
+            
+            // Check remaining bytes
+            for (uint i = 8; i < patternLen && found; i++) {
+                found = (textPtr[i] == patternPtr[i]);
+            }
+        } else {
+            found = true;
+            for (uint i = 0; i < patternLen && found; i++) {
+                found = (textPtr[i] == patternPtr[i]);
+            }
+        }
+    }
+    // Extended SIMD support for 16-byte patterns
+    else if (patternLen == 16) {
+        // Use 128-bit integer SIMD (endianness-safe)
+        #if __METAL_VERSION__ >= 240
+        if (((ulong)textPtr % 16 == 0) && ((ulong)patternPtr % 16 == 0)) {
+            // Safe: uint4 vectors compare element-wise, preserving byte order
+            const uint4 textChars = *reinterpret_cast<device const uint4*>(textPtr);
+            const uint4 patternChars = *reinterpret_cast<device const uint4*>(patternPtr);
+            found = all(textChars == patternChars);
+        } else {
+            // Fallback: check in 8-byte chunks
+            found = true;
+            for (uint i = 0; i < 16 && found; i += 8) {
+                if (((ulong)(textPtr + i) % 8 == 0) && ((ulong)(patternPtr + i) % 8 == 0)) {
+                    const ulong textChunk = *reinterpret_cast<device const ulong*>(textPtr + i);
+                    const ulong patternChunk = *reinterpret_cast<device const ulong*>(patternPtr + i);
+                    found = (textChunk == patternChunk);
+                } else {
+                    // Byte-by-byte for unaligned remainder
+                    for (uint j = 0; j < 8 && found; j++) {
+                        found = (textPtr[i + j] == patternPtr[i + j]);
+                    }
+                }
+            }
+        }
+        #else
+        // Fallback: unrolled comparison for older Metal versions
+        found = true;
+        for (uint i = 0; i < 16 && found; i++) {
+            found = (textPtr[i] == patternPtr[i]);
+        }
+        #endif
+    }
+    // Extended SIMD support for 32-byte patterns
+    else if (patternLen == 32) {
+        // Use 256-bit integer comparison (endianness-safe)
+        #if __METAL_VERSION__ >= 240
+        if (((ulong)textPtr % 16 == 0) && ((ulong)patternPtr % 16 == 0)) {
+            // Safe: uint4 vectors compare element-wise, preserving byte order
+            const uint4 textChars1 = *reinterpret_cast<device const uint4*>(textPtr);
+            const uint4 patternChars1 = *reinterpret_cast<device const uint4*>(patternPtr);
+            const uint4 textChars2 = *reinterpret_cast<device const uint4*>(textPtr + 16);
+            const uint4 patternChars2 = *reinterpret_cast<device const uint4*>(patternPtr + 16);
+            
+            bool chunk1Match = all(textChars1 == patternChars1);
+            bool chunk2Match = all(textChars2 == patternChars2);
+            found = chunk1Match && chunk2Match;
+        } else {
+            // Fallback: check in 8-byte chunks
+            found = true;
+            for (uint i = 0; i < 32 && found; i += 8) {
+                if (((ulong)(textPtr + i) % 8 == 0) && ((ulong)(patternPtr + i) % 8 == 0)) {
+                    const ulong textChunk = *reinterpret_cast<device const ulong*>(textPtr + i);
+                    const ulong patternChunk = *reinterpret_cast<device const ulong*>(patternPtr + i);
+                    found = (textChunk == patternChunk);
+                } else {
+                    // Byte-by-byte for unaligned remainder
+                    for (uint j = 0; j < 8 && found; j++) {
+                        found = (textPtr[i + j] == patternPtr[i + j]);
+                    }
+                }
+            }
+        }
+        #else
+        // Fallback: check in 8-byte chunks for older Metal versions
+        found = true;
+        for (uint i = 0; i < 32 && found; i += 8) {
+            const ulong textChunk = *reinterpret_cast<device const ulong*>(textPtr + i);
+            const ulong patternChunk = *reinterpret_cast<device const ulong*>(patternPtr + i);
+            found = (textChunk == patternChunk);
+        }
         #endif
     }
     // Optimized loop with first/last character pre-check for longer patterns

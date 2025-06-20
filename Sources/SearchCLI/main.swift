@@ -15,7 +15,7 @@ func validateFileExists(_ path: String) throws {
     }
 }
 
-func validateIterations(_ iterations: Int, max: Int = 10000) throws {
+func validateIterations(_ iterations: Int, max: Int = 100000) throws {
     guard iterations > 0 else {
         throw ValidationError("Iterations must be greater than 0")
     }
@@ -310,7 +310,7 @@ struct Profile: ParsableCommand {
     var patterns: String?
     
     func validate() throws {
-        try validateIterations(iterations, max: 1000)
+        try validateIterations(iterations, max: 10000)
     }
     
     func run() throws {

@@ -548,14 +548,7 @@ public final class SearchEngine {
             throw SearchEngineError.invalidPattern("Pattern failed to encode as UTF-8")
         }
         
-        // Prevent potential ReDoS attacks by limiting complex patterns
-        let suspiciousPatterns = [".*.*.*.*", "+{", "*{", "(?", "\\"]
-        for suspicious in suspiciousPatterns {
-            if pattern.contains(suspicious) {
-                // Note: This is simple pattern matching, not regex - but being extra careful
-                continue // Allow these for now as we're doing literal matching
-            }
-        }
+        // Note: This is literal string matching, not regex - no ReDoS concerns
     }
     
     // MARK: - Search Execution
@@ -653,7 +646,8 @@ public final class SearchEngine {
         // Calculate optimal dispatch configuration
         let dispatchConfig = calculateDispatchConfiguration(
             pipeline: pipeline,
-            totalPositions: mappedFileLength - Int(patternLength) + 1
+            totalPositions: mappedFileLength - Int(patternLength) + 1,
+            patternLength: patternLength
         )
         
         encoder.dispatchThreads(dispatchConfig.threadsPerGrid, 
@@ -675,7 +669,8 @@ public final class SearchEngine {
     
     private func calculateDispatchConfiguration(
         pipeline: MTLComputePipelineState,
-        totalPositions: Int
+        totalPositions: Int,
+        patternLength: UInt32
     ) -> (threadsPerGrid: MTLSize, threadsPerThreadgroup: MTLSize) {
         
         guard totalPositions > 0 else {
@@ -684,13 +679,36 @@ public final class SearchEngine {
         
         let threadsPerGrid = MTLSize(width: totalPositions, height: 1, depth: 1)
         
-        // Calculate optimal threadgroup size
+        // Calculate optimal threadgroup size based on GPU architecture
         let threadWidth = pipeline.threadExecutionWidth
         let maxGroup = pipeline.maxTotalThreadsPerThreadgroup
-        let desiredGroupWidth = (threadWidth > 0 && maxGroup >= threadWidth) 
-            ? (maxGroup / threadWidth) * threadWidth 
-            : SearchEngineConstants.defaultThreadgroupWidth
-        let groupWidth = min(maxGroup, desiredGroupWidth, totalPositions)
+        
+        // Optimize for different GPU architectures and pattern characteristics
+        let groupWidth: Int
+        if threadWidth > 0 && maxGroup >= threadWidth {
+            // Calculate optimal occupancy based on pattern length and memory access patterns
+            let simdMultiple = max(threadWidth, 32) // At least 32 threads for good occupancy
+            
+            // Adjust group size based on pattern length for better cache utilization
+            let cacheOptimalSize: Int
+            
+            if patternLength <= 8 {
+                // Short patterns: maximize parallelism
+                cacheOptimalSize = maxGroup
+            } else if patternLength <= 32 {
+                // Medium patterns: balance parallelism with cache efficiency
+                cacheOptimalSize = min(maxGroup, 512)
+            } else {
+                // Long patterns: prioritize cache efficiency
+                cacheOptimalSize = min(maxGroup, 256)
+            }
+            
+            let optimalGroups = cacheOptimalSize / simdMultiple
+            groupWidth = min(optimalGroups * simdMultiple, totalPositions, maxGroup)
+        } else {
+            // Fallback for older GPUs or unknown architectures
+            groupWidth = min(SearchEngineConstants.defaultThreadgroupWidth, totalPositions, maxGroup)
+        }
         
         let threadsPerThreadgroup = MTLSize(width: max(1, groupWidth), height: 1, depth: 1)
         

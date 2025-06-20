@@ -9,19 +9,19 @@ public enum SearchEngineConstants {
     // MARK: - Buffer Size Configuration
     
     /// Minimum number of positions to store in GPU memory
-    public static let minPositionsToStore: UInt64 = 1024
+    public static let minPositionsToStore: UInt64 = 4096
     
     /// Maximum positions buffer size for Apple Silicon (unified memory)
-    public static let maxPositionsAppleSilicon: UInt64 = 50_000_000
+    public static let maxPositionsAppleSilicon: UInt64 = 200_000_000
     
     /// Maximum positions buffer size for discrete GPUs
-    public static let maxPositionsDiscreteGPU: UInt64 = 25_000_000
+    public static let maxPositionsDiscreteGPU: UInt64 = 100_000_000
     
     /// Default position buffer size for fallback scenarios
-    public static let defaultPositionBufferSize: UInt32 = 1_000_000
+    public static let defaultPositionBufferSize: UInt32 = 4_000_000
     
     /// Maximum number of patterns to cache in LRU cache
-    public static let maxPatternCacheSize = 32
+    public static let maxPatternCacheSize = 128
     
     // MARK: - Performance Tuning
     
@@ -37,8 +37,8 @@ public enum SearchEngineConstants {
     
     // MARK: - Pattern Validation
     
-    /// Maximum pattern length in bytes
-    public static let maxPatternLengthBytes = 4096
+    /// Maximum pattern length in bytes (64KB for complex patterns like DNA sequences)
+    public static let maxPatternLengthBytes = 65536
     
     
     // MARK: - Development and Testing
