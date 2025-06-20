@@ -8,7 +8,7 @@
 [![Swift Version](https://img.shields.io/badge/swift-6.1+-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Release](https://img.shields.io/badge/release-v2.1.6-blue.svg)](https://github.com/teenu/gpu-text-search/releases/tag/v2.1.6)
+[![Release](https://img.shields.io/badge/release-v2.1.7-blue.svg)](https://github.com/teenu/gpu-text-search/releases/tag/v2.1.7)
 
 ---
 
@@ -301,7 +301,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.1.6")
+    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.1.7")
 ]
 ```
 

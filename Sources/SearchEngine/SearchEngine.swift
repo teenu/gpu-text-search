@@ -683,30 +683,14 @@ public final class SearchEngine {
         let threadWidth = pipeline.threadExecutionWidth
         let maxGroup = pipeline.maxTotalThreadsPerThreadgroup
         
-        // Optimize for different GPU architectures and pattern characteristics
+        // Simple, proven GPU occupancy calculation
         let groupWidth: Int
         if threadWidth > 0 && maxGroup >= threadWidth {
-            // Calculate optimal occupancy based on pattern length and memory access patterns
-            let simdMultiple = max(threadWidth, 32) // At least 32 threads for good occupancy
-            
-            // Adjust group size based on pattern length for better cache utilization
-            let cacheOptimalSize: Int
-            
-            if patternLength <= 8 {
-                // Short patterns: maximize parallelism
-                cacheOptimalSize = maxGroup
-            } else if patternLength <= 32 {
-                // Medium patterns: balance parallelism with cache efficiency
-                cacheOptimalSize = min(maxGroup, 512)
-            } else {
-                // Long patterns: prioritize cache efficiency
-                cacheOptimalSize = min(maxGroup, 256)
-            }
-            
-            let optimalGroups = cacheOptimalSize / simdMultiple
-            groupWidth = min(optimalGroups * simdMultiple, totalPositions, maxGroup)
+            // Use hardware-optimal threadgroup size
+            let optimalSize = max(threadWidth, SearchEngineConstants.defaultThreadgroupWidth)
+            groupWidth = min(optimalSize, totalPositions, maxGroup)
         } else {
-            // Fallback for older GPUs or unknown architectures
+            // Fallback for older GPUs
             groupWidth = min(SearchEngineConstants.defaultThreadgroupWidth, totalPositions, maxGroup)
         }
         
