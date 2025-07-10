@@ -2,33 +2,37 @@ import Foundation
 import ArgumentParser
 import SearchEngine
 
-// MARK: - Shared Utilities
-
 func formatFileSize(_ bytes: Int) -> String {
-    let mb = Double(bytes) / (1024.0 * 1024.0)
-    return String(format: "%.2f MB (%lld bytes)", mb, Int64(bytes))
+    return SharedUtilities.formatFileSize(bytes)
+}
+
+func formatNumber(_ number: UInt32) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    return formatter.string(from: NSNumber(value: number)) ?? "\(number)"
 }
 
 func validateFileExists(_ path: String) throws {
-    guard FileManager.default.fileExists(atPath: path) else {
-        throw ValidationError("File does not exist: \(path)")
+    do {
+        try SharedUtilities.validateFileExists(path)
+    } catch {
+        throw ValidationError("File validation failed: \(error.localizedDescription)")
     }
 }
 
-func validateIterations(_ iterations: Int, max: Int = 10000) throws {
-    guard iterations > 0 else {
-        throw ValidationError("Iterations must be greater than 0")
-    }
-    guard iterations <= max else {
-        throw ValidationError("Iterations must not exceed \(max)")
+func validateIterations(_ iterations: Int, max: Int = Configuration.maxBenchmarkIterations) throws {
+    do {
+        try Configuration.validateIterations(iterations, max: max)
+    } catch {
+        throw ValidationError(error.localizedDescription)
     }
 }
 
-func initializeEngine(verbose: Bool, quiet: Bool = false) throws -> SearchEngine {
+func initializeEngine(verbose: Bool, quiet: Bool = false, maxPositions: UInt32? = nil) throws -> SearchEngine {
     if verbose && !quiet {
         print("Initializing Metal GPU search engine...")
     }
-    return try SearchEngine()
+    return try SearchEngine(maxPositions: maxPositions)
 }
 
 func mapFile(engine: SearchEngine, path: String, verbose: Bool, quiet: Bool = false) throws {
@@ -43,25 +47,9 @@ func mapFile(engine: SearchEngine, path: String, verbose: Bool, quiet: Bool = fa
     }
 }
 
-// Numerically stable standard deviation calculation using Welford's algorithm
 func calculateStandardDeviation(_ values: [TimeInterval]) -> TimeInterval {
-    guard values.count > 1 else { return 0 }
-    var mean: Double = 0
-    var m2: Double = 0
-    var count: Double = 0
-    
-    for value in values {
-        count += 1
-        let delta = value - mean
-        mean += delta / count
-        let delta2 = value - mean
-        m2 += delta * delta2
-    }
-    
-    return sqrt(m2 / (count - 1))
+    return SharedUtilities.calculateStandardDeviation(values)
 }
-
-// MARK: - Main CLI Application
 
 @main
 struct SearchCLI: ParsableCommand {
@@ -69,9 +57,6 @@ struct SearchCLI: ParsableCommand {
         commandName: "search-cli",
         abstract: "High-performance GPU-accelerated text search tool",
         discussion: """
-        This tool uses Metal compute shaders to achieve exceptional search performance
-        on large files by leveraging GPU parallel processing capabilities.
-        
         Examples:
           search-cli search file.txt "pattern"
           search-cli benchmark file.txt "pattern" --iterations 50
@@ -81,8 +66,6 @@ struct SearchCLI: ParsableCommand {
         defaultSubcommand: Search.self
     )
 }
-
-// MARK: - Search Command
 
 struct Search: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -101,8 +84,11 @@ struct Search: ParsableCommand {
     @Flag(name: .shortAndLong, help: "Show only match count (script-friendly)")
     var quiet = false
     
-    @Option(name: .shortAndLong, help: "Maximum positions to display (default: 100)")
-    var limit: Int = 100
+    @Option(name: .shortAndLong, help: "Maximum positions to display (default: \(Configuration.defaultPositionDisplayLimit))")
+    var limit: Int = Configuration.defaultPositionDisplayLimit
+    
+    @Option(help: "Maximum positions to store in memory (default: auto-detect based on available memory)")
+    var maxPositions: UInt32?
     
     @Option(help: "Export positions to binary file at specified path")
     var exportBinary: String?
@@ -110,28 +96,51 @@ struct Search: ParsableCommand {
     @Flag(help: "Warm up GPU before search for peak performance")
     var warmup = false
     
+    @Option(help: "Number of warmup iterations for optimal cold start performance (default: 3)")
+    var warmupIterations: Int = 3
+    
+    @Flag(help: "Measure and report pure initialization time separately from execution")
+    var measureInitTime = false
+    
     func validate() throws {
         guard limit > 0 else {
             throw ValidationError("Limit must be greater than 0")
+        }
+        guard warmupIterations > 0 else {
+            throw ValidationError("Warmup iterations must be greater than 0")
         }
     }
     
     func run() throws {
         try validateFileExists(file)
         
-        let engine = try initializeEngine(verbose: verbose, quiet: quiet)
-        try mapFile(engine: engine, path: file, verbose: verbose, quiet: quiet)
+        // Pure initialization - no file mapping or GPU operations
+        let initStartTime = CFAbsoluteTimeGetCurrent()
+        let engine = try initializeEngine(verbose: verbose, quiet: quiet, maxPositions: maxPositions)
+        let initEndTime = CFAbsoluteTimeGetCurrent()
+        let initTime = initEndTime - initStartTime
+        
+        if measureInitTime || (verbose && !quiet) {
+            print("Pure initialization time: \(String(format: "%.4f", initTime)) seconds")
+        }
         
         if verbose && !quiet {
+            print("Max positions to store: \(formatNumber(engine.maxPositionsToStore))")
+            if let requestedPositions = maxPositions, requestedPositions != engine.maxPositionsToStore {
+                print("⚠️  Requested \(formatNumber(requestedPositions)) positions, using \(formatNumber(engine.maxPositionsToStore)) (system limit)")
+            }
             print("Searching for pattern: '\(pattern)'")
         }
+        
+        // File mapping and search execution phase
+        try mapFile(engine: engine, path: file, verbose: verbose, quiet: quiet)
         
         // Perform GPU warmup if requested
         if warmup {
             if verbose && !quiet {
-                print("Warming up GPU for peak performance...")
+                print("Warming up GPU for peak performance (\(warmupIterations) iterations)...")
             }
-            try engine.warmup()
+            try engine.warmup(iterations: warmupIterations)
         }
         
         // Perform search
@@ -146,14 +155,12 @@ struct Search: ParsableCommand {
         
         // Export binary if requested
         if let exportPath = exportBinary {
-            try engine.exportPositionsBinary(to: URL(fileURLWithPath: exportPath))
+            try engine.exportPositions(to: URL(fileURLWithPath: exportPath))
             if verbose && !quiet {
                 print("Exported binary positions to \(exportPath)")
             }
         }
     }
-    
-    // MARK: - Helper Methods
     
     private func printSearchResult(_ result: SearchResult, limit: Int, verbose: Bool) {
         if verbose {
@@ -169,21 +176,19 @@ struct Search: ParsableCommand {
             print("Found \(result.matchCount) matches\(truncatedIndicator) in \(String(format: "%.4f", result.executionTime))s (\(String(format: "%.2f", result.throughputMBps)) MB/s)")
         }
         
-        // Display positions
-        if !result.positions.isEmpty && !quiet {
-            let displayCount = min(result.positions.count, limit)
+        let positions = result.getPositions(limit: limit)
+        if !positions.isEmpty && !quiet {
+            let displayCount = positions.count
             if verbose {
                 print("\nFirst \(displayCount) positions:")
             }
-            let positions = result.positions.prefix(displayCount).map(String.init).joined(separator: ", ")
-            let ellipsis = result.positions.count > displayCount ? "..." : ""
-            print("[\(positions)\(ellipsis)]")
+            let positionStrings = positions.map(String.init).joined(separator: ", ")
+            let ellipsis = result.matchCount > displayCount ? "..." : ""
+            print("[\(positionStrings)\(ellipsis)]")
         }
     }
     
 }
-
-// MARK: - Benchmark Command
 
 struct Benchmark: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -196,8 +201,8 @@ struct Benchmark: ParsableCommand {
     @Argument(help: "Pattern to search for")
     var pattern: String
     
-    @Option(name: .shortAndLong, help: "Number of iterations to run (default: 100)")
-    var iterations: Int = 100
+    @Option(name: .shortAndLong, help: "Number of iterations to run (default: \(Configuration.defaultBenchmarkIterations))")
+    var iterations: Int = Configuration.defaultBenchmarkIterations
     
     @Flag(name: .shortAndLong, help: "Show verbose output with detailed statistics")
     var verbose = false
@@ -236,8 +241,6 @@ struct Benchmark: ParsableCommand {
         }
     }
     
-    // MARK: - Output Methods
-    
     private func printBenchmarkResults(_ benchmark: BenchmarkResult, verbose: Bool) {
         print("\n--- Benchmark Results ---")
         print("Pattern: '\(benchmark.pattern)'")
@@ -261,7 +264,6 @@ struct Benchmark: ParsableCommand {
         print("Min throughput: \(String(format: "%.2f", minThroughput)) MB/s")
         print("Std deviation: \(String(format: "%.4f", stdDev)) seconds")
         
-        // Check consistency
         let matchCounts = Set(benchmark.results.map(\.matchCount))
         if matchCounts.count == 1 {
             print("✅ Results consistent: All iterations found \(matchCounts.first!) matches")
@@ -286,8 +288,6 @@ struct Benchmark: ParsableCommand {
     
 }
 
-// MARK: - Profile Command
-
 struct Profile: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Profile search performance across different patterns"
@@ -296,8 +296,8 @@ struct Profile: ParsableCommand {
     @Argument(help: "File to profile")
     var file: String
     
-    @Option(name: .shortAndLong, help: "Number of iterations per pattern (default: 10)")
-    var iterations: Int = 10
+    @Option(name: .shortAndLong, help: "Number of iterations per pattern (default: \(Configuration.defaultProfileIterations))")
+    var iterations: Int = Configuration.defaultProfileIterations
     
     @Flag(name: .shortAndLong, help: "Show verbose output with detailed information")
     var verbose = false
@@ -306,7 +306,7 @@ struct Profile: ParsableCommand {
     var patterns: String?
     
     func validate() throws {
-        try validateIterations(iterations, max: 1000)
+        try validateIterations(iterations, max: Configuration.maxProfileIterations)
     }
     
     func run() throws {
@@ -336,14 +336,12 @@ struct Profile: ParsableCommand {
         let engine = try SearchEngine()
         try engine.mapFile(at: URL(fileURLWithPath: file))
         
-        // Print header
         print("Pattern\t\tLength\tMatches\tAvg Time(s)\tThroughput(MB/s)\tMin(s)\tMax(s)")
         print("-------\t\t------\t-------\t-----------\t---------------\t------\t------")
         
         for pattern in testPatterns {
             var results: [SearchResult] = []
             
-            // Run multiple iterations for each pattern
             for _ in 0..<iterations {
                 let result = try engine.search(pattern: pattern)
                 results.append(result)
@@ -370,8 +368,6 @@ struct Profile: ParsableCommand {
         }
     }
 }
-
-// MARK: - Error Handling
 
 struct ValidationError: Error, LocalizedError {
     let message: String
