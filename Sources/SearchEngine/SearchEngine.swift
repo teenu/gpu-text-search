@@ -71,8 +71,8 @@ public final class SearchEngine {
     public var fileSize: Int { fileMapper.fileSize }
     public var maxPositionsToStore: UInt32 { metalResourceManager.maxPositionsToStore }
     
-    public init(maxPositions: UInt32? = nil) throws {
-        self.metalResourceManager = try MetalResourceManager(maxPositions: maxPositions)
+    public init(maxPositions: UInt32? = nil, eagerInit: Bool = true) throws {
+        self.metalResourceManager = try MetalResourceManager(maxPositions: maxPositions, eagerInit: eagerInit)
         self.fileMapper = FileMapper(metalResourceManager: metalResourceManager)
         self.patternCache = PatternCache(metalResourceManager: metalResourceManager)
         self.benchmarkEngine = BenchmarkEngine()

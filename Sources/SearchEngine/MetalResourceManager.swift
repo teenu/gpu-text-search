@@ -29,15 +29,37 @@ final class MetalResourceManager {
     private var persistentMatchCountBuffer: MTLBuffer?
     private var persistentPositionsBuffer: MTLBuffer?
     
-    init(maxPositions: UInt32? = nil) throws {
-        // Fast initialization - no GPU operations, just store configuration
+    init(maxPositions: UInt32? = nil, eagerInit: Bool = true) throws {
         self.maxPositionsToStore = Configuration.getOptimalMaxPositions(for: nil, requestedPositions: maxPositions)
         
-        // Defer ALL Metal operations until first search (true lazy loading)
-        self.device = nil
-        self.commandQueue = nil
-        self.persistentMatchCountBuffer = nil
-        self.persistentPositionsBuffer = nil
+        if eagerInit {
+            // Eager initialization - setup all GPU resources immediately for consistent cold start performance
+            guard let defaultDevice = MTLCreateSystemDefaultDevice() else {
+                throw MetalError.noDeviceAvailable
+            }
+            
+            guard defaultDevice.supportsFamily(.common1) else {
+                throw MetalError.deviceNotSupported(defaultDevice.name)
+            }
+            
+            self.device = defaultDevice
+            
+            guard let queue = defaultDevice.makeCommandQueue() else {
+                throw MetalError.commandQueueCreationFailed
+            }
+            self.commandQueue = queue
+            
+            // Setup all resources upfront for consistent performance
+            try setupPersistentBuffers()
+            try setupBinaryArchive()
+            try setupSearchPipeline()
+        } else {
+            // Lazy initialization - defer all Metal operations until first search
+            self.device = nil
+            self.commandQueue = nil
+            self.persistentMatchCountBuffer = nil
+            self.persistentPositionsBuffer = nil
+        }
     }
     
     /// Ensure Metal device and command queue are initialized (lazy initialization)
@@ -98,7 +120,7 @@ final class MetalResourceManager {
         
         let resourceOptions = optimalStorageMode()
         
-        // Only allocate small match count buffer during first GPU use (4 bytes)
+        // Pre-allocate persistent match count buffer (4 bytes)
         var initialCount: UInt32 = 0
         persistentMatchCountBuffer = device.makeBuffer(
             bytes: &initialCount,
@@ -107,12 +129,17 @@ final class MetalResourceManager {
         )
         persistentMatchCountBuffer?.label = "Persistent Match Count Buffer"
         
-        guard persistentMatchCountBuffer != nil else {
-            throw MetalError.bufferCreationFailed("match count buffer", size: MemoryLayout<UInt32>.size)
-        }
+        // Pre-allocate positions buffer at maximum size for consistent cold start performance
+        let positionsBufferSize = Int(maxPositionsToStore) * MemoryLayout<UInt32>.size
+        persistentPositionsBuffer = device.makeBuffer(
+            length: positionsBufferSize,
+            options: resourceOptions
+        )
+        persistentPositionsBuffer?.label = "Persistent Positions Buffer"
         
-        // Defer large positions buffer allocation until first search (lazy loading)
-        persistentPositionsBuffer = nil
+        guard persistentMatchCountBuffer != nil && persistentPositionsBuffer != nil else {
+            throw MetalError.bufferCreationFailed("persistent buffers", size: positionsBufferSize)
+        }
     }
     
     func optimalStorageMode() -> MTLResourceOptions {
@@ -220,7 +247,8 @@ final class MetalResourceManager {
     func getPersistentPositionsBuffer() throws -> MTLBuffer {
         try ensureMetalInitialized()
         
-        // Lazy allocation - create buffer on first access
+        // For eager initialization, buffer is already allocated
+        // For lazy initialization, create buffer on first access
         if persistentPositionsBuffer == nil {
             guard let device = device else {
                 throw MetalError.noDeviceAvailable
