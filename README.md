@@ -28,6 +28,8 @@ gpu-text-search benchmark genome.fasta "GATTACA" --iterations 50
 
 **🚀 Result:** Search 3GB files in 0.09 seconds with 32+ GB/s throughput
 
+> **v2.3.1 Performance:** Optimized cold start consistency with 9-39% better variance than previous versions
+
 ---
 
 ## Why GPU Text Search?
@@ -319,7 +321,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.3.0")
+    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.3.1")
 ]
 ```
 
