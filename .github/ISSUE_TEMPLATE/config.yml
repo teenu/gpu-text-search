@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/teenu/gpu-text-search/discussions
+    about: Ask questions, share ideas, and discuss GPU Text Search with the community
+  - name: Documentation
+    url: https://github.com/teenu/gpu-text-search#readme
+    about: Check the comprehensive README for usage examples and API documentation

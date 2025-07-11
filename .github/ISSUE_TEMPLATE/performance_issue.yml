@@ -1,0 +1,89 @@
+name: Performance Issue
+description: Report performance problems or unexpected slowdowns
+title: "[PERFORMANCE] "
+labels: ["performance", "needs-investigation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Performance is critical for GPU Text Search. Help us identify and fix performance regressions or unexpected behavior.
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: Performance Issue Description
+      description: Describe the performance problem you're experiencing
+      placeholder: GPU Text Search is running slower than expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: benchmarks
+    attributes:
+      label: Performance Data
+      description: Please provide benchmark results or timing information
+      placeholder: |
+        Expected: 30+ GB/s
+        Actual: 5 GB/s
+        
+        Command used: gpu-text-search benchmark file.txt "pattern"
+        Output: [paste benchmark results here]
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: System Environment
+      description: Detailed system information
+      placeholder: |
+        - macOS version: 14.0
+        - Hardware: Apple M2 Pro (8-core CPU, 16-core GPU)
+        - Memory: 16GB unified
+        - Storage: SSD
+        - GPU Text Search version: v2.3.0
+        - File size being searched: 3.1GB
+        - Pattern complexity: simple string "GATTACA"
+    validations:
+      required: true
+
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Performance Comparison
+      description: How does performance compare to expectations or previous versions?
+      placeholder: |
+        - Expected throughput based on documentation
+        - Performance with different file sizes
+        - Comparison to other tools (grep, ripgrep)
+
+  - type: dropdown
+    id: pattern-type
+    attributes:
+      label: Pattern Type
+      description: What type of pattern are you searching for?
+      options:
+        - Simple string (e.g., "GATTACA")
+        - Single character (e.g., "A")
+        - Complex pattern
+        - Multiple patterns
+        - Very long pattern (>100 chars)
+    validations:
+      required: true
+
+  - type: textarea
+    id: file-details
+    attributes:
+      label: File Characteristics
+      description: Details about the files you're searching
+      placeholder: |
+        - File size: 3.1GB
+        - File type: FASTA genome sequence
+        - Content type: DNA sequences, text data, binary, etc.
+        - Typical match density: high/medium/low
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other relevant details about the performance issue

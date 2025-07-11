@@ -5,10 +5,28 @@
 > **32+ GB/s throughput** • **150x faster than grep** • **GPU-accelerated** • **Production-ready**
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2013.0+-lightgrey.svg)](https://developer.apple.com/macos/)
-[![Swift Version](https://img.shields.io/badge/swift-6.1+-orange.svg)](https://swift.org)
+[![Swift Version](https://img.shields.io/badge/swift-5.9+-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Release](https://img.shields.io/badge/release-v2.1.3-blue.svg)](https://github.com/teenu/gpu-text-search/releases/tag/v2.1.3)
+[![Release](https://img.shields.io/github/v/release/teenu/gpu-text-search)](https://github.com/teenu/gpu-text-search/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/teenu/gpu-text-search)](https://github.com/teenu/gpu-text-search/stargazers)
+[![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-compatible-brightgreen)](https://swiftpackageindex.com/teenu/gpu-text-search)
+
+---
+
+## ⚡ Quick Start
+
+```bash
+# Install via Homebrew
+brew install teenu/gpu-text-search/gpu-text-search
+
+# Search for patterns at 32+ GB/s
+gpu-text-search large_file.txt "search_pattern"
+
+# Benchmark performance
+gpu-text-search benchmark genome.fasta "GATTACA" --iterations 50
+```
+
+**🚀 Result:** Search 3GB files in 0.09 seconds with 32+ GB/s throughput
 
 ---
 
@@ -123,7 +141,7 @@ print("Found \(result.matchCount) matches")
 print("Throughput: \(result.throughputMBps) MB/s")
 
 // Export positions
-try engine.exportPositionsBinary(to: exportURL)
+try engine.exportPositions(to: exportURL)
 ```
 
 ## API Reference
@@ -145,7 +163,7 @@ public final class SearchEngine {
     public func search(pattern: String) throws -> SearchResult
     
     /// Export match positions as binary data
-    public func exportPositionsBinary(to url: URL) throws
+    public func exportPositions(to url: URL) throws
     
     /// Run performance benchmark
     public func benchmark(file: URL, pattern: String, iterations: Int) throws -> BenchmarkResult
@@ -301,7 +319,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "1.0.0")
+    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.3.0")
 ]
 ```
 
@@ -327,7 +345,7 @@ func searchGenome() throws {
     print("Found \(result.matchCount) sequences in \(result.executionTime)s")
     
     // Export for downstream analysis
-    try engine.exportPositionsBinary(to: URL(fileURLWithPath: "matches.bin"))
+    try engine.exportPositions(to: URL(fileURLWithPath: "matches.bin"))
 }
 ```
 
