@@ -17,7 +17,8 @@
 
 ```bash
 # Install via Homebrew
-brew install teenu/gpu-text-search/gpu-text-search
+brew tap teenu/gpu-text-search
+brew install gpu-text-search
 
 # Search for patterns at 32+ GB/s
 gpu-text-search large_file.txt "search_pattern"
@@ -81,9 +82,6 @@ Transform your text processing workflows with **industry-leading performance**:
 # Add the tap and install
 brew tap teenu/gpu-text-search
 brew install gpu-text-search
-
-# Or install directly in one command
-brew install teenu/gpu-text-search/gpu-text-search
 ```
 
 ### Build from Source
