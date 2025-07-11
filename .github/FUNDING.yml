@@ -1,0 +1,9 @@
+# Funding configuration for gpu-text-search
+# Enables sponsor button on repository homepage
+
+# Buy Me a Coffee - Support the development of gpu-text-search
+buy_me_a_coffee: teenu
+
+# Future funding options (uncomment when ready):
+# github: teenu
+# custom: ["https://paypal.me/example"]
