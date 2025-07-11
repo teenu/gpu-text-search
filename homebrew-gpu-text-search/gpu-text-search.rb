@@ -5,8 +5,8 @@ class GpuTextSearch < Formula
   desc "Ultra-high-performance GPU-accelerated text search using Metal compute shaders"
   homepage "https://github.com/teenu/gpu-text-search"
   url "https://github.com/teenu/gpu-text-search.git",
-      tag:      "v2.3.0",
-      revision: "a2db8f332aa3b0677b025d9a9d397c9e20afc10c"
+      revision: "1a821fedb143bb59a63ab18b7ce0c21e0aa59e44"
+  version "2.3.1"
   license "MIT"
   head "https://github.com/teenu/gpu-text-search.git", branch: "main"
 
