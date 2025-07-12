@@ -17,46 +17,25 @@ kernel void searchOptimizedKernel(
     }
 
     bool found = false;
+    
     if (patternLen == 1) {
-        if (text[gid] == pattern[0]) {
-            found = true;
-        }
+        found = (text[gid] == pattern[0]);
     } else {
+        // Early termination: check first and last characters
         if (text[gid] == pattern[0] && text[gid + patternLen - 1] == pattern[patternLen - 1]) {
-            bool middleMatch = true;
-            
-            if (patternLen == 2) {
-                middleMatch = true;
-            } else if (patternLen == 3) {
-                middleMatch = (text[gid + 1] == pattern[1]);
-            } else if (patternLen == 4) {
-                middleMatch = (text[gid + 1] == pattern[1]) && 
-                             (text[gid + 2] == pattern[2]);
-            } else if (patternLen <= 8) {
-                for (uint i = 1; i < patternLen - 1; i++) {
-                    if (text[gid + i] != pattern[i]) {
-                        middleMatch = false;
-                        break;
-                    }
+            // Unified loop for all middle characters (handles lengths 2-∞)
+            found = true;
+            for (uint i = 1; i < patternLen - 1; i++) {
+                if (text[gid + i] != pattern[i]) {
+                    found = false;
+                    break;
                 }
-            } else {
-                for (uint i = 1; i < patternLen - 1; i++) {
-                    if (text[gid + i] != pattern[i]) {
-                        middleMatch = false;
-                        break;
-                    }
-                }
-            }
-            
-            if (middleMatch) {
-                found = true;
             }
         }
     }
 
     if (found) {
         uint storeIndex = atomic_fetch_add_explicit(matchCount, 1, memory_order_relaxed);
-
         if (storeIndex < maxPositions) {
             positions[storeIndex] = gid;
         }

@@ -1,0 +1,12 @@
+Hello, World! Hello again! Hello once more!
+This is a test file for benchmarking the GPU text search engine.
+We need some patterns to search for: 
+- Single character: a, e, o
+- Short words: the, and, for
+- Longer patterns: Hello, World, engine
+- Complex patterns: gpu-text-search, benchmarking
+The quick brown fox jumps over the lazy dog.
+Pattern matching is fundamental to text processing.
+This file contains multiple instances of the word "the" and "Hello".
+Performance testing requires consistent, repeatable results.
+Throughput measurements should be in the range of GB/s for large files.
