@@ -28,7 +28,7 @@ public enum Configuration {
         }
     }
     
-    /// Get optimal maximum positions with fast defaults and validation
+    /// Get optimal maximum positions
     public static func getOptimalMaxPositions(for device: MTLDevice? = nil, requestedPositions: UInt32? = nil) -> UInt32 {
         // Use user-provided value if specified
         if let requested = requestedPositions {
@@ -36,7 +36,7 @@ public enum Configuration {
             return max(minMaxPositions, min(requested, maxMaxPositions))
         }
         
-        // Fast default: 50M positions (200MB buffer) for optimal cold start performance
+        // Default: 50M positions
         return defaultMaxPositions
     }
     

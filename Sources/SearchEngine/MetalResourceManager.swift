@@ -1,7 +1,7 @@
 import Foundation
 import Metal
 
-/// Manages Metal GPU resources, pipeline states, and compute dispatch configuration
+/// Manages Metal GPU resources and compute pipelines
 final class MetalResourceManager {
     
     private static let kernelFunctionName = Configuration.kernelFunctionName
@@ -17,7 +17,6 @@ final class MetalResourceManager {
     }
     let maxPositionsToStore: UInt32
     
-    /// Get the Metal device, initializing if needed
     func getDevice() throws -> MTLDevice {
         try ensureMetalInitialized()
         guard let device = device else {
@@ -33,7 +32,6 @@ final class MetalResourceManager {
         self.maxPositionsToStore = Configuration.getOptimalMaxPositions(for: nil, requestedPositions: maxPositions)
         
         if eagerInit {
-            // Eager initialization - setup all GPU resources immediately for consistent cold start performance
             guard let defaultDevice = MTLCreateSystemDefaultDevice() else {
                 throw MetalError.noDeviceAvailable
             }
@@ -49,12 +47,11 @@ final class MetalResourceManager {
             }
             self.commandQueue = queue
             
-            // Setup all resources upfront for consistent performance
+            // Setup resources for consistent performance
             try setupPersistentBuffers()
             try setupBinaryArchive()
             try setupSearchPipeline()
         } else {
-            // Lazy initialization - defer all Metal operations until first search
             self.device = nil
             self.commandQueue = nil
             self.persistentMatchCountBuffer = nil
@@ -62,7 +59,6 @@ final class MetalResourceManager {
         }
     }
     
-    /// Ensure Metal device and command queue are initialized (lazy initialization)
     private func ensureMetalInitialized() throws {
         if device == nil {
             guard let defaultDevice = MTLCreateSystemDefaultDevice() else {
@@ -80,7 +76,6 @@ final class MetalResourceManager {
             }
             self.commandQueue = queue
             
-            // Setup basic buffers
             try setupPersistentBuffers()
         }
     }
@@ -247,8 +242,6 @@ final class MetalResourceManager {
     func getPersistentPositionsBuffer() throws -> MTLBuffer {
         try ensureMetalInitialized()
         
-        // For eager initialization, buffer is already allocated
-        // For lazy initialization, create buffer on first access
         if persistentPositionsBuffer == nil {
             guard let device = device else {
                 throw MetalError.noDeviceAvailable
@@ -277,10 +270,8 @@ final class MetalResourceManager {
         positionsBuffer: MTLBuffer
     ) throws -> (totalCount: UInt32, positions: [UInt32], truncated: Bool) {
         
-        // Ensure Metal is initialized before any GPU operations
         try ensureMetalInitialized()
         
-        // Lazy setup of binary archive and pipeline on first search
         if searchPipeline == nil {
             try setupBinaryArchive()
             try setupSearchPipeline()

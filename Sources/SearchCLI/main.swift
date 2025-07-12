@@ -114,7 +114,6 @@ struct Search: ParsableCommand {
     func run() throws {
         try validateFileExists(file)
         
-        // Pure initialization - no file mapping or GPU operations
         let initStartTime = CFAbsoluteTimeGetCurrent()
         let engine = try initializeEngine(verbose: verbose, quiet: quiet, maxPositions: maxPositions)
         let initEndTime = CFAbsoluteTimeGetCurrent()
@@ -132,10 +131,8 @@ struct Search: ParsableCommand {
             print("Searching for pattern: '\(pattern)'")
         }
         
-        // File mapping and search execution phase
         try mapFile(engine: engine, path: file, verbose: verbose, quiet: quiet)
         
-        // Perform GPU warmup if requested
         if warmup {
             if verbose && !quiet {
                 print("Warming up GPU for peak performance (\(warmupIterations) iterations)...")
@@ -143,17 +140,14 @@ struct Search: ParsableCommand {
             try engine.warmup(iterations: warmupIterations)
         }
         
-        // Perform search
         let result = try engine.search(pattern: pattern)
         
-        // Output results
         if quiet {
             print(result.matchCount)
         } else {
             printSearchResult(result, limit: limit, verbose: verbose)
         }
         
-        // Export binary if requested
         if let exportPath = exportBinary {
             try engine.exportPositions(to: URL(fileURLWithPath: exportPath))
             if verbose && !quiet {

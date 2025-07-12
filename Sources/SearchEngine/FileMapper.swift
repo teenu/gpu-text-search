@@ -1,7 +1,7 @@
 import Foundation
 import Metal
 
-/// Manages file mapping operations and Metal buffer creation for zero-copy file access
+/// Manages file mapping and Metal buffer creation
 final class FileMapper {
     
     private var mappedFilePtr: UnsafeMutableRawPointer?

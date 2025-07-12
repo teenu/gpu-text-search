@@ -1,7 +1,7 @@
 import Foundation
 import Metal
 
-/// Base protocol for all search engine errors
+/// Base protocol for search errors
 public protocol SearchEngineErrorProtocol: Error, LocalizedError {
     var errorCode: String { get }
 }

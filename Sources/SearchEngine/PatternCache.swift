@@ -1,7 +1,7 @@
 import Foundation
 import Metal
 
-/// Manages pattern buffer caching with LRU eviction policy for optimal performance
+/// Manages pattern buffer caching with LRU eviction
 final class PatternCache {
     
     private let metalResourceManager: MetalResourceManager
@@ -12,7 +12,6 @@ final class PatternCache {
     init(metalResourceManager: MetalResourceManager) {
         self.metalResourceManager = metalResourceManager
     }
-    
     
     private func compactCacheUnderMemoryPressure() {
         let targetSize = max(1, Configuration.maxPatternCacheSize / 4)

@@ -56,7 +56,7 @@ public struct BenchmarkResult {
     }
 }
 
-/// High-performance GPU-accelerated text search engine using Metal compute shaders
+/// GPU-accelerated text search engine using Metal
 public final class SearchEngine {
     
     private let metalResourceManager: MetalResourceManager

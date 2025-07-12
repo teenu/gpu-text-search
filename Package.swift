@@ -10,27 +10,23 @@ let package = Package(
         .macCatalyst(.v16)
     ],
     products: [
-        // MARK: - Library Products
         .library(
             name: "SearchEngine",
             targets: ["SearchEngine"]
         ),
         
-        // MARK: - Executable Products
         .executable(
             name: "search-cli",
             targets: ["SearchCLI"]
         ),
     ],
     dependencies: [
-        // MARK: - External Dependencies
         .package(
             url: "https://github.com/apple/swift-argument-parser.git",
             from: "1.2.0"
         ),
     ],
     targets: [
-        // MARK: - Library Targets
         .target(
             name: "SearchEngine",
             dependencies: [],
@@ -46,7 +42,6 @@ let package = Package(
             ]
         ),
         
-        // MARK: - Executable Targets  
         .executableTarget(
             name: "SearchCLI",
             dependencies: [
@@ -62,7 +57,6 @@ let package = Package(
             ]
         ),
         
-        // MARK: - Test Targets
         .testTarget(
             name: "SearchEngineTests",
             dependencies: ["SearchEngine"],
