@@ -32,4 +32,8 @@ Icon
 # Temporary files
 *.tmp
 *.log
-EOF < /dev/null
+
+# Vulkan build artifacts
+gts
+shaders/*.spv
+*.o

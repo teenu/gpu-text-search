@@ -1,474 +1,142 @@
 # GPU Text Search
 
-> **Ultra-high-performance text search using Metal GPU compute shaders**
+> **Ultra-high-performance text search using GPU compute shaders**
 >
-> **32+ GB/s throughput** • **150x faster than grep** • **GPU-accelerated** • **Production-ready**
-
-[![Platform](https://img.shields.io/badge/platform-macOS%2013.0+-lightgrey.svg)](https://developer.apple.com/macos/)
-[![Swift Version](https://img.shields.io/badge/swift-5.9+-orange.svg)](https://swift.org)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/teenu/gpu-text-search)](https://github.com/teenu/gpu-text-search/releases/latest)
-[![GitHub Stars](https://img.shields.io/github/stars/teenu/gpu-text-search)](https://github.com/teenu/gpu-text-search/stargazers)
-[![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-compatible-brightgreen)](https://swiftpackageindex.com/teenu/gpu-text-search)
+> **Metal (macOS)** and **Vulkan (Linux/WSL2)** backends
 
 ---
 
-## ⚡ Quick Start
+## Backends
 
-```bash
-# Install via Homebrew
-brew tap teenu/gpu-text-search
-brew install gpu-text-search
+### Metal (macOS) — `main` branch
+- Apple Metal compute shaders, Swift CLI
+- 32+ GB/s on M2 Pro (200 GB/s unified memory)
+- Zero-copy via `storageModeShared`
+- Homebrew install: `brew tap teenu/gpu-text-search && brew install gpu-text-search`
 
-# Search for patterns at 32+ GB/s
-gpu-text-search large_file.txt "search_pattern"
-
-# Benchmark performance
-gpu-text-search benchmark genome.fasta "GATTACA" --iterations 50
-```
-
-**🚀 Result:** Search 3GB files in 0.09 seconds with 32+ GB/s throughput
-
-> **v2.3.1 Performance:** Optimized cold start consistency with 9-39% better variance than previous versions
+### Vulkan (Linux/WSL2) — `vulkan` branch
+- Vulkan compute shaders, C CLI
+- 3.2 GB/s peak on AMD Vega 8 iGPU via WSL2 (DDR4-3200)
+- Works on any Vulkan-capable GPU or CPU (lavapipe)
+- Chunked processing for files of any size
 
 ---
 
-## Why GPU Text Search?
-
-Transform your text processing workflows with **industry-leading performance**:
-
-- **AI Researchers**: Accelerate RAG document preprocessing by 150x
-- **Bioinformaticians**: Process genome-scale datasets at 32+ GB/s  
-- **Data Scientists**: Mine large document corpora in seconds, not hours
-- **Developers**: Drop-in grep replacement with massive speedup
-
-## Performance
-
-- **32.3 GB/s peak throughput** on Apple M2 Pro
-- **~150x faster than grep** on large files
-- **Zero-copy memory access** via mmap
-- **Parallel GPU processing** of every byte position
-
-## Features
-
-### Exceptional Performance
-- Metal compute shaders for parallel GPU execution
-- Memory-mapped file access (zero-copy)
-- Hardware-optimized threadgroup dispatching
-- Atomic operations with relaxed memory ordering
-
-### Production Ready
-- Comprehensive error handling and edge case coverage
-- Binary position export for downstream processing
-- Statistical benchmarking with variance analysis
-- Cross-platform support (macOS, iOS, macCatalyst)
-
-### Advanced Analytics
-- Built-in benchmarking suite with statistical analysis
-- Performance profiling across multiple patterns
-- CSV export for data analysis
-- Throughput and timing metrics
-
-### Developer Friendly
-- Clean Swift Package Manager integration
-- Comprehensive test suite with validation
-- CLI and library interfaces
-- Detailed documentation and examples
-
-## Installation
-
-### Homebrew (Recommended)
-```bash
-# Add the tap and install
-brew tap teenu/gpu-text-search
-brew install gpu-text-search
-```
-
-### Build from Source
-```bash
-git clone https://github.com/teenu/gpu-text-search.git
-cd gpu-text-search
-swift build -c release
-cp .build/release/search-cli /usr/local/bin/gpu-text-search
-```
-
-### Pre-compiled Binary
-```bash
-# Download from GitHub Releases
-curl -L -o search-cli https://github.com/teenu/gpu-text-search/releases/latest/download/search-cli
-chmod +x search-cli
-sudo mv search-cli /usr/local/bin/gpu-text-search
-```
-
-### System Requirements
-- **macOS 13.0+** (Ventura or later)
-- **Apple Silicon or Intel Mac** with Metal GPU support
-- **Xcode 15.0+** (for building from source)
-
-## Quick Start
-
-### Basic Usage
-```bash
-# Simple search
-gpu-text-search file.txt "pattern"
-
-# Get match count only
-gpu-text-search file.txt "pattern" --quiet
-
-# Verbose output with timing
-search-cli search file.txt "pattern" --verbose
-
-# Benchmark performance
-search-cli benchmark file.txt "pattern" --iterations 100
-
-# Profile multiple patterns
-search-cli profile file.txt --verbose
-```
-
-### Library Usage
-
-```swift
-import SearchEngine
-
-// Initialize engine
-let engine = try SearchEngine()
-
-// Map file and search
-try engine.mapFile(at: fileURL)
-let result = try engine.search(pattern: "GATTACA")
-
-print("Found \(result.matchCount) matches")
-print("Throughput: \(result.throughputMBps) MB/s")
-
-// Export positions
-try engine.exportPositions(to: exportURL)
-```
-
-## API Reference
-
-### Core Classes
-
-#### `SearchEngine`
-High-performance GPU-accelerated text search engine.
-
-```swift
-public final class SearchEngine {
-    /// Initialize with Metal GPU support
-    public init() throws
-    
-    /// Map file into memory for searching
-    public func mapFile(at url: URL) throws
-    
-    /// Search for pattern in mapped file
-    public func search(pattern: String) throws -> SearchResult
-    
-    /// Export match positions as binary data
-    public func exportPositions(to url: URL) throws
-    
-    /// Run performance benchmark
-    public func benchmark(file: URL, pattern: String, iterations: Int) throws -> BenchmarkResult
-}
-```
-
-#### `SearchResult`
-Contains search results and performance metrics.
-
-```swift
-public struct SearchResult {
-    public let matchCount: UInt32       // Total matches found
-    public let positions: [UInt32]      // Match positions
-    public let executionTime: TimeInterval  // Search duration
-    public let throughputMBps: Double   // Performance metric
-    public let truncated: Bool          // Whether results were limited
-}
-```
-
-### CLI Commands
-
-#### Search
-```bash
-search-cli search <file> <pattern> [options]
-
-Options:
-  --verbose, -v          Show detailed output
-  --quiet, -q           Show only match count
-  --limit, -l <n>       Max positions to display
-  --export-binary <path> Export positions to binary file
-```
-
-#### Benchmark
-```bash
-search-cli benchmark <file> <pattern> [options]
-
-Options:
-  --iterations, -i <n>  Number of test iterations
-  --verbose, -v         Show detailed statistics
-  --csv                 Output CSV format
-```
-
-#### Profile
-```bash
-search-cli profile <file> [options]
-
-Options:
-  --iterations, -i <n>  Iterations per pattern
-  --patterns <list>     Custom comma-separated patterns
-  --verbose, -v         Show detailed information
-```
-
-## Use Cases
-
-### AI & Machine Learning
-```bash
-# RAG document preprocessing - find all mentions of entities
-gpu-text-search large_corpus.txt "neural network" --export-binary entities.bin
-
-# Benchmark multiple AI terms across datasets
-gpu-text-search research_papers.txt --profile --patterns "transformer,attention,bert"
-```
-
-### Bioinformatics
-```bash
-# Genome analysis - find GATTACA sequences
-gpu-text-search genome.fasta "GATTACA" --verbose
-
-# Primer design - profile multiple primer candidates
-gpu-text-search sequences.fasta --profile --patterns "ATCG,GCTA,TAGA"
-```
-
-### Data Science
-```bash
-# Log analysis at scale
-gpu-text-search server_logs.txt "ERROR" --warmup --verbose
-
-# Performance benchmarking
-gpu-text-search large_dataset.csv "target_pattern" --benchmark --iterations 100
-```
-
-## Performance Benchmarks
-
-### Real-World Results
-
-| Use Case | File Size | Pattern | Matches | Time | Throughput |
-|----------|-----------|---------|---------|------|------------|
-| Genome Analysis | 3.1 GB | "GATTACA" | 733,756 | 0.092s | **32.3 GB/s** |
-| Document Mining | 3.0 GB | "neural" | 45,230 | 0.15s | **20.1 GB/s** |
-| Log Processing | 1.5 GB | "ERROR" | 12,847 | 0.07s | **21.4 GB/s** |
-
-### vs. Traditional Tools
-
-| Tool | Throughput | Use Case Performance |
-|------|------------|---------------------|
-| **GPU Text Search** | **32.3 GB/s** | **Production Ready** |
-| ripgrep | ~1 GB/s | Good for small files |
-| GNU grep | ~0.2 GB/s | Basic text search |
-| ag (silver searcher) | ~0.5 GB/s | Development use |
-
-## Technical Architecture
-
-### Metal Compute Optimization
-
-```metal
-kernel void searchOptimizedKernel(
-    device const uchar* text,
-    device const uchar* pattern,
-    constant uint& patternLen,
-    device atomic_uint* matchCount,
-    constant uint& textLength,
-    device uint* positions,
-    constant uint& maxPositions,
-    uint gid [[ thread_position_in_grid ]]
-)
-```
-
-**Key Optimizations:**
-- **First/last character pre-check**: 90% reduction in full comparisons
-- **Single-character fast path**: Optimized branch for 1-byte patterns
-- **Atomic operations**: Thread-safe result collection
-- **Memory coalescing**: Optimal GPU memory access patterns
-
-### Memory Management
-
-```swift
-// Zero-copy file mapping
-let ptr = mmap(nil, fileSize, PROT_READ, MAP_PRIVATE, fd, 0)
-
-// Direct GPU buffer access
-fileBuffer = device.makeBuffer(
-    bytesNoCopy: ptr,
-    length: fileSize,
-    options: .storageModeShared,
-    deallocator: nil
-)
-```
-
-### Thread Configuration
-
-```swift
-// Hardware-aware threadgroup sizing
-let threadWidth = pipeline.threadExecutionWidth
-let maxGroup = pipeline.maxTotalThreadsPerThreadgroup
-let groupWidth = min(maxGroup, optimalSize, totalPositions)
-```
-
-## Installation
-
-### Swift Package Manager
-
-Add to your `Package.swift`:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/teenu/gpu-text-search.git", from: "2.3.1")
-]
-```
+## Vulkan Backend
 
 ### Requirements
 
-- **macOS 13+** / **iOS 16+** / **macCatalyst 16+**
-- **Swift 5.9+**
-- **Metal-capable GPU** (Apple Silicon recommended)
-- **Xcode 15+** (for development)
-
-## Examples
-
-### Basic Text Search
-
-```swift
-import SearchEngine
-
-func searchGenome() throws {
-    let engine = try SearchEngine()
-    try engine.mapFile(at: URL(fileURLWithPath: "genome.fasta"))
-    
-    let result = try engine.search(pattern: "GATTACA")
-    print("Found \(result.matchCount) sequences in \(result.executionTime)s")
-    
-    // Export for downstream analysis
-    try engine.exportPositions(to: URL(fileURLWithPath: "matches.bin"))
-}
-```
-
-### Performance Benchmarking
-
-```swift
-func benchmarkSearch() throws {
-    let engine = try SearchEngine()
-    let benchmark = try engine.benchmark(
-        file: URL(fileURLWithPath: "large-dataset.txt"),
-        pattern: "target-sequence", 
-        iterations: 100
-    )
-    
-    print("Average: \(benchmark.averageTime)s")
-    print("Throughput: \(benchmark.averageThroughput) MB/s")
-    print("Std dev: \(benchmark.standardDeviation)s")
-}
-```
-
-### CLI Automation
+- GCC, libvulkan-dev, glslang-tools
+- A Vulkan ICD (lavapipe for CPU, RADV/dzn for GPU)
 
 ```bash
-#!/bin/bash
-# Automated performance testing
-
-for pattern in "ATCG" "GATTACA" "SEQUENCE"; do
-    echo "Testing pattern: $pattern"
-    search-cli benchmark genome.fasta "$pattern" --csv >> results.csv
-done
-
-# Generate performance report
-search-cli profile genome.fasta --patterns "ATCG,GATTACA,SEQUENCE" --verbose
+sudo apt install gcc libvulkan-dev glslang-tools make
 ```
 
-## Advanced Usage
-
-### Custom Pattern Analysis
-
-```swift
-let patterns = ["ATCG", "GATTACA", "TATABOX", "SEQUENCE"]
-for pattern in patterns {
-    let result = try engine.search(pattern: pattern)
-    let density = Double(result.matchCount) / Double(engine.fileSize)
-    print("\(pattern): \(result.matchCount) matches, density: \(density)")
-}
-```
-
-### Binary Position Processing
-
-```python
-# Python script to read exported positions
-import struct
-
-def read_positions(filename):
-    positions = []
-    with open(filename, 'rb') as f:
-        while True:
-            data = f.read(4)  # UInt32 = 4 bytes
-            if not data:
-                break
-            pos = struct.unpack('<I', data)[0]
-            positions.append(pos)
-    return positions
-
-# Analyze match distribution
-positions = read_positions('matches.bin')
-print(f"Found {len(positions)} matches")
-print(f"First match at position: {positions[0]}")
-print(f"Average spacing: {(positions[-1] - positions[0]) / len(positions)}")
-```
-
-## Testing
-
-### Run Test Suite
+### Build
 
 ```bash
-# Run all tests
-swift test
-
-# Run with coverage
-swift test --enable-code-coverage
-
-# Run specific tests
-swift test --filter SearchEngineTests
+git clone https://github.com/teenu/gpu-text-search.git
+cd gpu-text-search
+git checkout vulkan
+make
 ```
 
-### Validation Suite
+Or without make:
+```bash
+glslangValidator -V shaders/search.comp -o shaders/search.comp.spv
+gcc -O2 -Wall -Wextra -o gts src/main.c src/vk_init.c src/vk_search.c -lvulkan -lm
+```
+
+### Usage
 
 ```bash
-# Comprehensive validation
-python3 comprehensive_test.py
+./gts <file> <pattern> [--benchmark N]
 
-# Binary export validation  
-python3 validate_binary.py positions.bin file.txt "pattern"
+# Examples
+./gts genome.fasta "GATTACA"
+./gts server.log "ERROR" --benchmark 10
 ```
 
-## Contributing
+### WSL2 GPU Setup
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-optimization`)
-3. **Test** your changes thoroughly
-4. **Commit** your changes (`git commit -am 'Add amazing optimization'`)
-5. **Push** to the branch (`git push origin feature/amazing-optimization`)
-6. **Create** a Pull Request
+WSL2 doesn't expose `/dev/dri`, so standard Mesa drivers (RADV, ANV) won't find the GPU. The path is:
 
-### Development Guidelines
+```
+Vulkan → dzn (Mesa) → D3D12 → /dev/dxg → Windows GPU driver → GPU
+```
 
-- **Performance**: Always benchmark changes against baseline
-- **Testing**: Add tests for new functionality
-- **Documentation**: Update docs for API changes
-- **Style**: Follow Swift API Design Guidelines
+To build the dzn driver from Mesa source:
+
+```bash
+sudo apt install meson ninja-build pkg-config python3-mako \
+  libdrm-dev llvm-dev libelf-dev libexpat1-dev libclc-18-dev
+
+pip3 install --user meson mako
+
+git clone --depth 1 --branch mesa-25.2.8 \
+  https://gitlab.freedesktop.org/mesa/mesa.git /tmp/mesa-dzn
+
+cd /tmp/mesa-dzn
+~/.local/bin/meson setup build \
+  -Dvulkan-drivers=microsoft-experimental \
+  -Dgallium-drivers= -Dglx=disabled -Degl=disabled \
+  -Dplatforms= --buildtype=release
+
+ninja -C build
+
+sudo cp build/src/microsoft/vulkan/libvulkan_dzn.so /usr/local/lib/
+sudo tee /usr/share/vulkan/icd.d/dzn_icd.x86_64.json << 'EOF'
+{"ICD":{"api_version":"1.2.0","library_path":"/usr/local/lib/libvulkan_dzn.so"},"file_format_version":"1.0.0"}
+EOF
+sudo ldconfig
+```
+
+Then run with:
+```bash
+VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/dzn_icd.x86_64.json ./gts file pattern
+```
+
+### Architecture
+
+Same algorithm as the Metal backend:
+
+1. File is `mmap`'d and processed in 256 MB chunks
+2. GLSL compute shader runs one thread per byte position
+3. First/last byte pre-check eliminates ~90% of candidates
+4. Unified loop for middle bytes, early exit on mismatch
+5. Atomic counter for match count, position array for locations
+6. Pre-allocated, persistently-mapped Vulkan buffers reused across chunks
+
+```
+src/
+  main.c        CLI, mmap, chunked orchestration, benchmark stats
+  vk_init.c/h   Instance, device, queue, memory type probing
+  vk_search.c/h Pipeline, buffers, dispatch, result readback
+shaders/
+  search.comp   GLSL 450 compute shader (256 threads/workgroup)
+```
+
+### Performance
+
+Tested on 3.2 GB genomic data, pattern "GATTACA" (691,704 matches):
+
+| Backend | Throughput | Hardware |
+|---------|-----------|----------|
+| Vulkan + dzn | 3.2 GB/s peak | AMD Vega 8 iGPU, DDR4-3200, WSL2 |
+| Vulkan + lavapipe | 0.8 GB/s | CPU software renderer |
+| Metal | 32+ GB/s | Apple M2 Pro, LPDDR5 |
+
+## Algorithm
+
+Both backends implement identical search logic:
+
+- **Thread model**: One thread per candidate position in the text
+- **Pre-filter**: First and last byte comparison before full match (eliminates ~90%)
+- **Matching**: Sequential byte comparison for middle characters with early exit
+- **Results**: Atomic increment of match counter, bounded position storage
+- **Overlapping**: Finds all overlapping occurrences (unlike `grep -o`)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- **Apple Metal Team**: For exceptional GPU compute framework
-- **Swift Community**: For ArgumentParser and ecosystem support
-- **Contributors**: Everyone who helped optimize and test
-
----
-
-**Built for high-performance text processing**
+MIT License - see [LICENSE](LICENSE) file.

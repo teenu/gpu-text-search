@@ -1,0 +1,46 @@
+#version 450
+
+layout(local_size_x = 256) in;
+
+layout(binding = 0, std430) readonly buffer TextBuffer  { uint text_data[]; };
+layout(binding = 1, std430) readonly buffer PatBuffer   { uint pat_data[];  };
+layout(binding = 2, std430)          buffer ResultBuffer { uint match_count; uint positions[]; };
+
+layout(push_constant) uniform Params {
+    uint text_len;
+    uint pat_len;
+    uint max_positions;
+};
+
+void main() {
+    uint gid = gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x
+             + gl_GlobalInvocationID.x;
+
+    if (gid + pat_len > text_len) return;
+
+    // First byte check
+    uint t = (text_data[gid >> 2] >> ((gid & 3u) * 8u)) & 0xFFu;
+    uint p = (pat_data[0]) & 0xFFu;
+    if (t != p) return;
+
+    // Last byte check
+    if (pat_len > 1) {
+        uint last = gid + pat_len - 1;
+        t = (text_data[last >> 2] >> ((last & 3u) * 8u)) & 0xFFu;
+        p = (pat_data[(pat_len - 1) >> 2] >> (((pat_len - 1) & 3u) * 8u)) & 0xFFu;
+        if (t != p) return;
+    }
+
+    // Middle bytes
+    for (uint i = 1; i < pat_len - 1; i++) {
+        uint ti = gid + i;
+        t = (text_data[ti >> 2] >> ((ti & 3u) * 8u)) & 0xFFu;
+        p = (pat_data[i >> 2] >> ((i & 3u) * 8u)) & 0xFFu;
+        if (t != p) return;
+    }
+
+    uint idx = atomicAdd(match_count, 1);
+    if (idx < max_positions) {
+        positions[idx] = gid;
+    }
+}
